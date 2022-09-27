@@ -90,3 +90,7 @@ if __name__ == "__main__":
 
 # we constantly fetch data from the CSV with every user query. while this seems inefficient, it is the only way (i know) to get live data.
 # also easier integration when converting to database access
+
+
+# find a way (e.g. flexbox) to arrange the search fields, before anything else
+# then u use the existing input fields to test queries
