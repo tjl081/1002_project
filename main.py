@@ -13,7 +13,7 @@ def pd_to_json(df):
 
 def get_csv_as_pd():
     """helper function, converts all data rows in all csv files in the "data" folder into a single python dataframe"""
-    path = os.getcwd() + '\\data\\'
+    path = os.getcwd() + '\\data\\cleaned\\'
     print(f"CWD:{path}")
     csv_files = glob.glob(os.path.join(path, "*.csv"))
     df = pd.concat((pd.read_csv(f) for f in csv_files), ignore_index=True)
