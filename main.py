@@ -1,4 +1,5 @@
 import eel
+from jmespath import search
 import pandas as pd
 import json
 import glob
@@ -50,13 +51,23 @@ def get_dropdown_values(input_df = None, column_names = []):
          
 
 @eel.expose
-def query_csv(search_query_json = None, max_rows = 2000):
+def query_csv(search_query_dict = None, max_rows = 2000):
     """retrieves data from .csv file containing dataset. returns data as JSON to allow the Javascript code to handle the data as an object"""
     df = get_csv_as_pd()
 
-    if search_query_json: # if there is a JSON object added into the parameters
+    if search_query_dict: # if there is a JSON object added into the parameters
         # https://www.geeksforgeeks.org/python-filtering-data-with-pandas-query-method/ for multiple query method
-        search_query_dict = json.load(search_query_json)
+        
+        print(search_query_dict)
+        # conditions = []
+        for key,value in search_query_dict.items():
+            # conditions.append(df[key].str.contains(value))
+            if value:
+                print(key)
+                print(value)
+                df = df[df[key].astype(str).str.contains(value)]
+                print(f"Filtered. Nuber of rows: {len(df.index)}")
+        
         # sample search_query_json = {
         #     "month": "",
         #     "town": "",
@@ -91,6 +102,3 @@ if __name__ == "__main__":
 # we constantly fetch data from the CSV with every user query. while this seems inefficient, it is the only way (i know) to get live data.
 # also easier integration when converting to database access
 
-
-# find a way (e.g. flexbox) to arrange the search fields, before anything else
-# then u use the existing input fields to test queries
