@@ -62,11 +62,21 @@ def query_csv(search_query_dict = None, max_rows = 2000):
         # conditions = []
         for key,value in search_query_dict.items():
             # conditions.append(df[key].str.contains(value))
-            if value:
+
+            if value and "month_" in key: # special condition, if user is trying to set a date filter range
+                if key == "month_earliest":
+                    df = df[df["month"] >= value]
+                if key == "month_latest":
+                    df = df[df["month"] <= value]
+                print(f"Filtered. Nuber of rows: {len(df.index)}")
+
+            elif value and key in df.columns: # if value is not empty, and if column name exists in dataframe
                 print(key)
                 print(value)
                 df = df[df[key].astype(str).str.contains(value)]
                 print(f"Filtered. Nuber of rows: {len(df.index)}")
+
+            
         
         # sample search_query_json = {
         #     "month": "",
@@ -80,8 +90,11 @@ def query_csv(search_query_dict = None, max_rows = 2000):
         #     "resale_price": "",
         #     "remaining_lease": ""
         # }
-
+    
+    print(df["month"].min())
+    print(df["month"].max())
     df = df.iloc[:max_rows]  # determines max rows shown
+    
     return pd_to_json(df)
 
 

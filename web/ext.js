@@ -25,7 +25,9 @@ async function query_data(){
     }
     // console.log(column_name)
     // console.log($(element).val())
-    
+    // if(column_name in input_dict){
+
+    // }
     input_dict[column_name] = input_value
 
   });
@@ -68,14 +70,13 @@ async function populate_dropdown() {
   //this function gets all unique values of a specified column, then compiles them in a JSON object,
   //with the general format { key_name : [unique_value1, unique_value2] }
 
-  dropdown_column_names = ["flat_type", "town", "street_name", "flat_model" ] //specify all columns in dataset to pull all unique values for
+  dropdown_column_names = ["flat_type", "town", "street_name", "flat_model", "month" ] //specify all columns in dataset to pull all unique values for
   let dropdown_json = await eel.get_dropdown_values(null, dropdown_column_names)()
   console.log(dropdown_json)
   console.log(typeof dropdown_json)
 
   for (var key of Object.keys(dropdown_json)) {
     
-    console.log(dropdown_json["flat_type"])
     dropdown_json[key].sort()
     for (var index in dropdown_json[key]){
       if (key == "flat_type"){
@@ -90,11 +91,13 @@ async function populate_dropdown() {
       else if (key == "flat_model"){
         $( "#inputFlatModel" ).append(`<option>${dropdown_json[key][index]}</option>`);
       }
+      else if (key == "month"){
+        $( "#inputEarliestDate" ).append(`<option>${dropdown_json[key][index]}</option>`);
+        $( "#inputLatestDate" ).append(`<option>${dropdown_json[key][index]}</option>`);
+        
+      }
     }
       }
-  
-
-  
 
 }
 
@@ -122,18 +125,26 @@ async function populate_main_table() {
         for (var key of Object.keys(df[row_id])) {
           //console.log(key + " -> " + df[0][key])
           //$( "#main-table tbody tr" ).append(`<th>${df[row_id][key]}</th>`);
-          table_values_html += `<th>${df[row_id][key]}</th>`
+          table_values_html += `<td>${df[row_id][key]}</td>`
         }
         $( "#main-table tbody" ).append(`<tr>${table_values_html}</tr>`);//add a row
       }
   }
 
-  main_table = $('#main-table').DataTable({ language: {
-      "dom": '<"top"i>rt<"bottom"><"clear">',
+  main_table = $('#main-table').DataTable({ 
+    "pagingType": "input",
+    language: {
       searchPlaceholder: "",
       search: "Filter existing results by text/number: ",
+      "paginate": {
+        "first":      "First",
+        "last":       "Last",
+        "next":       "Next page >>",
+        "previous":   "Previous page <<"
+    },
     }
   }); //datatable is declared only when the HTML for the table has been finalised
+
   $('#main-table').toggle();
 
 }

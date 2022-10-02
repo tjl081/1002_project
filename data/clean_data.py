@@ -26,6 +26,7 @@ if __name__ == "__main__":
             lease_duration_left = lease_end_year - current_year
             df.at[index,'remaining_lease'] = lease_duration_left
     
+    
     print("Done. Exporting data....")
     os.makedirs(path + '\\cleaned', exist_ok=True)  
-    df.to_csv(path + '\\cleaned\\clean.csv')  
+    df.to_csv(path + '\\cleaned\\clean.csv', index=False)  
