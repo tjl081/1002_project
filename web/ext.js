@@ -12,14 +12,17 @@ function say_hello_js(x) {
 
 
 async function query_data(){
+  COLUMN_EXCLUDE_COUNT = 1 // to exclude _id column from mongodb
   //placeholder_str = "-- Any --"
   console.log("Input detected")
   input_dict = {}
+  is_filter = false // flag to indicate if any filtering is performed. if not, se input_dict to null TO PREVENT ERROR
   $('.data-query').each(function(index, element) {
     column_name = $(element).attr("data-field")
+    search_type = $(element).attr("search-type")
     input_value = $(element).val() 
 
-    selected_index = $(element).prop('selectedIndex');
+    selected_index = $(element).prop('selectedIndex'); //check if the first value of a dropdown (the placeholder) is selected
     if (selected_index == 0){
       input_value = ""
     }
@@ -28,19 +31,31 @@ async function query_data(){
     // if(column_name in input_dict){
 
     // }
-    input_dict[column_name] = input_value
+    if (input_value != ""){
+      is_filter = true
+    }
+    input_dict[column_name] = {"value": input_value, "search_type": search_type}
 
   });
+
+  if (!is_filter){
+    input_dict = null
+  }
+
   console.log(input_dict)
   console.log(typeof input_dict)
   datatable = $('#main-table').DataTable();
-  
-  async_counter += 1
-  let df = await eel.query_csv(input_dict)()
-  async_counter -= 1
-
   datatable.clear().draw();
   console.log("datatable cleared")
+  
+  async_counter += 1
+  let df = await eel.query_db(input_dict)()
+  console.log(df)
+  console.log(typeof df)
+  // //let df = await eel.query_csv(input_dict)()
+  async_counter -= 1
+
+  
   console.log(df)
   console.log(Object.keys(df).length)
 
@@ -72,9 +87,10 @@ async function populate_dropdown() {
 
   dropdown_column_names = ["flat_type", "town", "street_name", "flat_model", "month" ] //specify all columns in dataset to pull all unique values for
   let dropdown_json = await eel.get_dropdown_values(null, dropdown_column_names)()
+  console.log("dropdown values")
   console.log(dropdown_json)
   console.log(typeof dropdown_json)
-
+  
   for (var key of Object.keys(dropdown_json)) {
     
     dropdown_json[key].sort()
@@ -105,34 +121,47 @@ async function populate_dropdown() {
 async function populate_main_table() {
 
   
-  let df = await eel.query_csv()()  // returns list of JSON object, each representing a row in the csv (key=column name) 
+  //let df = await eel.query_csv()()  // returns list of JSON object, each representing a row in the csv (key=column name) 
+  let df = await eel.query_db(null)()
   console.log(df)
   console.log(typeof df)
 
+  console.log(df[0])
+  column_count = 0 // number of columns to show up on table
+  //exclude_column_count = 0 // number of columns to hide from table. value used to offset condition to check if a row has the right number of column values 
+  column_header_list = []
   //generate headers
   for (var key of Object.keys(df[0])) {
     //console.log(key + " -> " + df[0][key])
-    $( "#main-table thead tr" ).append(`<th>${key}</th>`);
-      }
-
-  column_count = Object.keys(df[0]).length
+    if (!(key.startsWith("_"))){  // append column header
+      column_header_list.push(key)
+      column_count += 1
+      $( "#main-table thead tr" ).append(`<th>${key}</th>`);
+    }
+    // else{
+    //   exclude_column_count += 1
+    // }
+  }
 
   for (row_id in df){
-    
-      if (Object.keys(df[row_id]).length == column_count){
+
+      if ((Object.keys(df[row_id]).length) == column_count){ 
+        // just to check if the number of items in the record matches the number of columns on the table
 
         table_values_html = ""
-        for (var key of Object.keys(df[row_id])) {
+        for (var key of column_header_list) {
           //console.log(key + " -> " + df[0][key])
           //$( "#main-table tbody tr" ).append(`<th>${df[row_id][key]}</th>`);
           table_values_html += `<td>${df[row_id][key]}</td>`
         }
         $( "#main-table tbody" ).append(`<tr>${table_values_html}</tr>`);//add a row
+        
       }
   }
 
   main_table = $('#main-table').DataTable({ 
     "pagingType": "input",
+    order: [[0, 'desc']],
     language: {
       searchPlaceholder: "",
       search: "Filter existing results by text/number: ",

@@ -1,9 +1,11 @@
 import eel
-from jmespath import search
 import pandas as pd
 import json
+from bson.json_util import dumps, loads
 import glob
 import os
+from pymongo import MongoClient
+from sympy import limit # pip install "pymongo[srv]"
 
 
 def pd_to_json(df):
@@ -11,6 +13,19 @@ def pd_to_json(df):
     result = df.to_json(orient="index")
     parsed = json.loads(result)
     return parsed
+
+def get_db():
+    """helper function, returns the resale price table as an object to run operations (like querying) on"""
+    PATH = os.getcwd() + '\\data\\'
+    CONNECTION_STR = ""
+    with open(PATH + '/access_url.txt', 'r') as f:
+        CONNECTION_STR = f.readline()
+    print(CONNECTION_STR)
+    client = MongoClient(CONNECTION_STR)
+    db = client.test
+    resale_prices = db["resale_prices"]
+    return resale_prices
+
 
 def get_csv_as_pd():
     """helper function, converts all data rows in all csv files in the "data" folder into a single python dataframe"""
@@ -34,21 +49,75 @@ def test_df():
 def get_dropdown_values(input_df = None, column_names = []):
     """retrieves all unique data from specified columns in the .csv file containing dataset"""
     output_dict = {}
+    data_table = get_db()
     if len(column_names) > 0:
-
-        if input_df == None:
-            input_df = get_csv_as_pd()
-
-        for name in column_names:
-            if name in input_df.columns:
-                output_dict[name] = list(input_df[name].unique())
-            else:
-                print(f"{name} is not a valid column.\n Column list:{input_df.columns}\n")
-        return json.loads(json.dumps(output_dict, indent = 4))
+        for key in column_names:
+            distinct_value_list = data_table.distinct(key)
+            output_dict[key] = distinct_value_list
+        return output_dict
     else:
         print("No columns specified in function. Aborting....")
         return None
-         
+    # sample result: { flat_type: (7) […], town: (27) […], street_name: (579) […], flat_model: (21) […], month: (393) […] }
+    # if len(column_names) > 0:
+
+    #     if input_df == None:
+    #         input_df = get_csv_as_pd()
+
+    #     for name in column_names:
+    #         if name in input_df.columns:
+    #             output_dict[name] = list(input_df[name].unique())
+    #         else:
+    #             print(f"{name} is not a valid column.\n Column list:{input_df.columns}\n")
+    #     return json.loads(json.dumps(output_dict, indent = 4))
+    # else:
+    #     print("No columns specified in function. Aborting....")
+    #     return None
+    
+
+
+
+@eel.expose
+def query_db(search_query_dict, result_limit = 2000):
+    DATE_COLUMN_NAME = "month"
+    data_table = get_db()
+    
+    # If we are getting everything, query dict should be an empty dict {}
+    # sample query appearance:
+
+    # "$and" : [{
+    #                 "center_id" : { "$eq" : 11}
+    #             },
+    #             {
+    #                 "meal_id" : { "$ne" : 1778}
+    #             }]
+    
+    if search_query_dict:
+        query_list = []
+        for key,value in search_query_dict.items():
+            search_value = value["value"]
+            if search_value and "month_" in key: # special condition, if user is trying to set a date filter range
+                if key == "month_earliest":
+                    query_list.append({DATE_COLUMN_NAME: {"$gte": search_value}})
+                if key == "month_latest":
+                    query_list.append({DATE_COLUMN_NAME: {"$lte": search_value}})
+                
+            elif search_value:
+                if value["search_type"] == "match_text":
+                    
+                    # must match value. Acceptable to use here, since dropdowns take unique values from the data itself
+                    query_list.append({key: {"$eq": search_value}}) 
+                else:
+                    query_list.append({key: {"$regex" : f".*{search_value}.*"}}) # search if string contains, case insensitive
+
+        # search_query_dict = {})
+        print(query_list)
+        cursor = data_table.find({"$and" : query_list}, limit=result_limit, projection={'_id': False}).sort("month", -1)
+    else:
+        cursor = data_table.find({}, limit=result_limit,  projection={'_id': False}).sort("month", -1)
+    result = json.loads(dumps(cursor))
+    print(len(result))
+    return result
 
 @eel.expose
 def query_csv(search_query_dict = None, max_rows = 2000):
