@@ -5,20 +5,15 @@ var async_counter = 0
 
 console.log("js file linked");
 
-eel.expose(say_hello_js); // Expose this function to Python
-function say_hello_js(x) {
-  console.log("Hello from " + x);
-}
-
 
 async function query_data(){
-  COLUMN_EXCLUDE_COUNT = 1 // to exclude _id column from mongodb
   //placeholder_str = "-- Any --"
   console.log("Input detected")
   input_dict = {}
   is_filter = false // flag to indicate if any filtering is performed. if not, se input_dict to null TO PREVENT ERROR
-  $('.data-query').each(function(index, element) {
-    column_name = $(element).attr("data-field")
+  $('.data-query').each(function(index, element) { // iterates through every HTML element with the .data-query class value
+    // refer to HTML to see what data-field and search-type means
+    column_name = $(element).attr("data-field") 
     search_type = $(element).attr("search-type")
     input_value = $(element).val() 
 
@@ -34,21 +29,21 @@ async function query_data(){
     if (input_value != ""){
       is_filter = true
     }
-    input_dict[column_name] = {"value": input_value, "search_type": search_type}
+    input_dict[column_name] = {"value": input_value, "search_type": search_type} 
 
   });
 
-  if (!is_filter){
+  if (!is_filter){ // if no filtering is done (e.g load all results when webpage opens)
     input_dict = null
   }
 
   console.log(input_dict)
   console.log(typeof input_dict)
   datatable = $('#main-table').DataTable();
-  datatable.clear().draw();
+  datatable.clear().draw(); // clear all data on table
   console.log("datatable cleared")
   
-  async_counter += 1
+  async_counter += 1 // flag to indicate if there are running async functions
   let df = await eel.query_db(input_dict)()
   console.log(df)
   console.log(typeof df)
@@ -59,10 +54,10 @@ async function query_data(){
   console.log(df)
   console.log(Object.keys(df).length)
 
-  if (async_counter == 0){ // if there are no pending async functions
+  if (async_counter == 0){ // if there are no pending async functions still running (i.e. it is the last one)
     for (row_id in df){
         
-        if (Object.keys(df[row_id]).length == column_count){
+        if (Object.keys(df[row_id]).length == column_count){ // check if the number of values in a row matches the number of columns. just in case.
 
           table_values = []
           for (var key of Object.keys(df[row_id])) {
@@ -160,8 +155,8 @@ async function populate_main_table() {
   }
 
   main_table = $('#main-table').DataTable({ 
-    "pagingType": "input",
-    order: [[0, 'desc']],
+    "pagingType": "input", //sets pagination mode
+    order: [[0, 'desc']], // sets first column as descending
     language: {
       searchPlaceholder: "",
       search: "Filter existing results by text/number: ",
@@ -174,24 +169,18 @@ async function populate_main_table() {
     }
   }); //datatable is declared only when the HTML for the table has been finalised
 
-  $('#main-table').toggle();
+  $('#main-table').toggle(); //set table to visible
 
 }
 
-say_hello_js("Javascript World!"); // output shows on browser side since this is just a javascript function
-eel.say_hello_py("Javascript World!2"); // Call a Python function. output displays on python side
-
-
-
 //EVENT LISTENERS
 
-$(document).ready( function () {
+$(document).ready( function () { // runs when the webpage loads
   
   populate_dropdown()
   populate_main_table()
   
 } );
-
 
 $(".data-query").on("input", function() {
   //every time an input is detected, run query
@@ -200,10 +189,7 @@ $(".data-query").on("input", function() {
   
   //contain_values = df[df['month'].str.contains('ju')]
 
-
-
 });
 
 
 // next move most likely is to split the input for the numerical column searches to accept 2 values (to form a range)
-// 
