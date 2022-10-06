@@ -50,3 +50,7 @@ if __name__ == "__main__":
     # db = client.test
     # resale_prices = db["resale_prices"]
     # resale_prices.insert_many(df.to_dict('records'))
+    # resale_prices.create_index([("town", 1)])
+    # resale_prices.create_index([("flat_type", 1)])
+    # resale_prices.create_index([("flat_model", 1)])
+    # resale_prices.create_index([("street_name", 1)])

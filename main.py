@@ -5,6 +5,7 @@ from bson.json_util import dumps # converts mongodb cursor into python suitable
 import glob
 import os
 from pymongo import MongoClient # pip install "pymongo[srv]"
+from datetime import datetime
 
 
 def pd_to_json(df):
@@ -20,7 +21,9 @@ def get_db():
     with open(PATH + '/access_url.txt', 'r') as f:
         CONNECTION_STR = f.readline()
     print(CONNECTION_STR)
+    initial_time = datetime.now()
     client = MongoClient(CONNECTION_STR)
+    print(f"Connected to MongoDB client in {(datetime.now() - initial_time).total_seconds()}")
     db = client.test
     resale_prices = db["resale_prices"]
     return resale_prices
@@ -41,9 +44,11 @@ def get_dropdown_values(input_df = None, column_names = []):
     output_dict = {}
     db = get_db()
     if len(column_names) > 0:  # checks if columns were added in the function args 
+        initial_time = datetime.now()
         for key in column_names: # for every column name
             distinct_value_list = db.distinct(key) # get all distinct values of each column name
             output_dict[key] = distinct_value_list # insert key name with distinct values in dict
+        print(f"Done collating unique values in {(datetime.now() - initial_time).total_seconds()}")
         return output_dict
     else:
         # if no columns were specified, this function is useless
@@ -82,7 +87,7 @@ def query_db(search_query_dict, result_limit = 2000):
     #             {
     #                 "meal_id" : { "$ne" : 1778}
     #             }]
-    
+    initial_time = datetime.now()
     if search_query_dict:  
         # if a query dict is specified, the code here runs to filter results
         query_list = []
@@ -112,7 +117,10 @@ def query_db(search_query_dict, result_limit = 2000):
     else:
         # else, get everything, limit results via result_limit
         cursor = data_table.find({}, limit=result_limit,  projection={'_id': False}).sort("month", -1)
+    print(f"Query done in {(datetime.now() - initial_time).total_seconds()}")
+    initial_time = datetime.now()
     result = json.loads(dumps(cursor))
+    print(f"JSON conversion done in {(datetime.now() - initial_time).total_seconds()}")
     print(len(result))
     return result
 
@@ -171,7 +179,7 @@ if __name__ == "__main__":
     eel.init('web', allowed_extensions=['.js', '.html'])
     # mode value depends on preferred browser. should find a way to implement our own browser check
     print("main.py running") 
-   # Call a Javascript function. the results are queued then displayed the moment the webpage starts up
+    # Call a Javascript function. the results are queued then displayed the moment the webpage starts up
     eel.start('main.html', mode="chrome-app") # code seems to pause here while website is running.
 
 

@@ -76,12 +76,10 @@ async function query_data(){
 }
 
 
-async function populate_dropdown() { 
+function populate_dropdown(dropdown_json) { 
   //this function gets all unique values of a specified column, then compiles them in a JSON object,
   //with the general format { key_name : [unique_value1, unique_value2] }
-
-  dropdown_column_names = ["flat_type", "town", "street_name", "flat_model", "month" ] //specify all columns in dataset to pull all unique values for
-  let dropdown_json = await eel.get_dropdown_values(null, dropdown_column_names)()
+  console.log("populating dropdown")
   console.log("dropdown values")
   console.log(dropdown_json)
   console.log(typeof dropdown_json)
@@ -113,11 +111,9 @@ async function populate_dropdown() {
 }
 
 
-async function populate_main_table() {
+function populate_main_table(df) {
 
-  
-  //let df = await eel.query_csv()()  // returns list of JSON object, each representing a row in the csv (key=column name) 
-  let df = await eel.query_db(null)()
+  console.log("populating main table")
   console.log(df)
   console.log(typeof df)
 
@@ -176,9 +172,12 @@ async function populate_main_table() {
 //EVENT LISTENERS
 
 $(document).ready( function () { // runs when the webpage loads
-  
-  populate_dropdown()
-  populate_main_table()
+  console.log("document ready")
+  dropdown_column_names = ["flat_type", "town", "street_name", "flat_model", "month" ] //specify all columns in dataset to pull all unique values for
+  eel.get_dropdown_values(null, dropdown_column_names)(populate_dropdown)
+  console.log(1)
+  eel.query_db(null)(populate_main_table)
+  console.log(2)
   
 } );
 
