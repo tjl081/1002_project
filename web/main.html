@@ -1,116 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css"
     integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.css">
-  
-    <title>My Website</title>
-    <link rel="stylesheet" href="/styles.css">
-    <link rel="icon" href="./favicon.ico" type="image/x-icon">
-  </head>
-  <body>
-    <main>
-        
-    </main>
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.css">
 
-    <div class="container" >
-      
-      <div class="form-row">
-        <div class="form-group col-md-2">
-          <label for="inputEarliestDate">Earliest date</label>
-          <select data-field="month_earliest" id="inputEarliestDate" class="data-query form-control">
-            <option>-- Any --</option>
-          </select>
-        </div>
-        <div class="form-group col-md-2">
-          <label for="inputLatestDate">Latest date</label>
-          <select data-field="month_latest" id="inputLatestDate" class="data-query form-control">
-            <option>-- Any --</option>
-          </select>
-        </div>
+
+  <title>My Website</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" type="text/css" href="css/main.css">
+  <link rel="icon" href="./favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+  <div class="header">
+    <div class="inner_header">
+      <div class="logo_container">
+        <h1>MY SITE</h1>
       </div>
 
-      <div class="form-row">
-        <div class="form-group col-md-4">
-          <label for="inputFlatType">Flat Type</label>
-          <select data-field="flat_type" id="inputFlatType" class="data-query form-control">
-            <option>-- Any --</option>
-          </select>
-        </div>
-        <div class="form-group col-md-4">
-          <label for="inputFlatModel">Flat Model</label>
-          <select data-field="flat_model" id="inputFlatModel" class="data-query form-control">
-            <option>-- Any --</option>
-          </select>
-        </div>
-        <div class="form-group col-md-4">
-          <label for="inputTown">Town</label>
-          <select data-field="town" id="inputTown" class="data-query form-control">
-            <option>-- Any --</option>
-          </select>
-        </div>
-        <div class="form-group col-md-4">
-          <label for="inputStreetName">Street Name</label>
-          <select data-field="street_name" id="inputStreetName" class="data-query form-control">
-            <option>-- Any --</option>
-          </select>
-        </div>
-      </div>
+      <ul class="navigation">
+        <a>
+          <li>Home</li>
+        </a>
+        <a>
+          <li>Compare Results</li>
+        </a>
+        <a>
+          <li>Favourites</li>
+        </a>
+        <a>
+          <li>Help</li>
+        </a>
+      </ul>
+    </div>
+  </div>
 
-      <div class="form-row">
-        <div class="form-group col-md-4">
-          <label for="inputBlockNumber">Block number</label>
-          <input data-field="block" type="text" class="data-query form-control" id="inputBlockNumber">
-        </div>
-        <div class="form-group col-md-4">
-          <label for="inputLeaseCommenceYear">Lease commence date (year)</label>
-          <input data-field="lease_commence_date" type="text" class="data-query form-control" id="inputLeaseCommenceYear">
-        </div>
-        <div class="form-group col-md-4">
-          <label for="inputResalePrice">Resale price</label>
-          <input data-field="resale_price" type="text" class="data-query form-control" id="inputResalePrice">
-        </div>
-      </div>
+  <div class="container">
 
-      
-    
+    <div class="form-row">
+      <div class="form-group col-md-2">
+        <label for="inputEarliestDate">Earliest date</label>
+        <select data-field="month_earliest" id="inputEarliestDate" class="data-query form-control">
+          <option>-- Any --</option>
+        </select>
+      </div>
+      <div class="form-group col-md-2">
+        <label for="inputLatestDate">Latest date</label>
+        <select data-field="month_latest" id="inputLatestDate" class="data-query form-control">
+          <option>-- Any --</option>
+        </select>
+      </div>
     </div>
 
-    <div class="container" >
-        <table id="main-table" class="table table-striped"
-            data-toggle="table"
-                data-toolbar="#toolbar"
-                data-height="460"
-                hidden>
-            <thead>
-                <tr>
-                    <!-- <th data-field="id">Item ID</th>
+    <div class="form-row">
+      <div class="form-group col-md-4">
+        <label for="inputFlatType">Flat Type</label>
+        <select data-field="flat_type" id="inputFlatType" class="data-query form-control">
+          <option>-- Any --</option>
+        </select>
+      </div>
+      <div class="form-group col-md-4">
+        <label for="inputFlatModel">Flat Model</label>
+        <select data-field="flat_model" id="inputFlatModel" class="data-query form-control">
+          <option>-- Any --</option>
+        </select>
+      </div>
+      <div class="form-group col-md-4">
+        <label for="inputTown">Town</label>
+        <select data-field="town" id="inputTown" class="data-query form-control">
+          <option>-- Any --</option>
+        </select>
+      </div>
+      <div class="form-group col-md-4">
+        <label for="inputStreetName">Street Name</label>
+        <select data-field="street_name" id="inputStreetName" class="data-query form-control">
+          <option>-- Any --</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group col-md-4">
+        <label for="inputBlockNumber">Block number</label>
+        <input data-field="block" type="text" class="data-query form-control" id="inputBlockNumber">
+      </div>
+      <div class="form-group col-md-4">
+        <label for="inputLeaseCommenceYear">Lease commence date (year)</label>
+        <input data-field="lease_commence_date" type="text" class="data-query form-control" id="inputLeaseCommenceYear">
+      </div>
+      <div class="form-group col-md-4">
+        <label for="inputResalePrice">Resale price</label>
+        <input data-field="resale_price" type="text" class="data-query form-control" id="inputResalePrice">
+      </div>
+    </div>
+
+
+
+  </div>
+
+  <div class="container">
+    <table id="main-table" class="table table-striped" data-toggle="table" data-toolbar="#toolbar" data-height="460"
+      hidden>
+      <thead>
+        <tr>
+          <!-- <th data-field="id">Item ID</th>
                     <th data-field="name">Item Name</th>
                     <th data-field="price">Item Price</th> -->
-                </tr>
-            </thead>
-            <tbody>
+        </tr>
+      </thead>
+      <tbody>
 
-            </tbody>
+      </tbody>
     </table>
-    </div>
+  </div>
 
-    <div class="navbar fixed-bottom" style="padding-bottom: 70px;"></div>
-	
-    <script type="text/javascript" src="/eel.js"></script>
-    
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/plug-ins/1.12.1/pagination/input.js"></script>
-    <script type="text/javascript" src="/ext.js"></script>
-  </body>
+  <div class="navbar fixed-bottom" style="padding-bottom: 70px;"></div>
+
+  <script type="text/javascript" src="/eel.js"></script>
+
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+    integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+    crossorigin="anonymous"></script>
+  <!-- Include all compiled plugins (below), or include individual files as needed -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"
+    integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
+    crossorigin="anonymous"></script>
+  <script type="text/javascript" charset="utf8"
+    src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.js"></script>
+  <script type="text/javascript" charset="utf8"
+    src="https://cdn.datatables.net/plug-ins/1.12.1/pagination/input.js"></script>
+  <script type="text/javascript" src="/ext.js"></script>
+</body>
+
 </html>
