@@ -8,6 +8,9 @@ from pymongo import MongoClient # pip install "pymongo[srv]"
 from datetime import datetime
 
 
+db_object = None
+
+
 def pd_to_json(df):
     """helper function, converts python dataframe to json-formatted string"""
     result = df.to_json(orient="index")
@@ -16,17 +19,20 @@ def pd_to_json(df):
 
 def get_db():
     """helper function, returns the resale price table as an object to run operations (like querying) on"""
-    PATH = os.getcwd() + '\\data\\'
-    CONNECTION_STR = ""
-    with open(PATH + '/access_url.txt', 'r') as f:
-        CONNECTION_STR = f.readline()
-    print(CONNECTION_STR)
-    initial_time = datetime.now()
-    client = MongoClient(CONNECTION_STR)
-    print(f"Connected to MongoDB client in {(datetime.now() - initial_time).total_seconds()}")
-    db = client.test
-    resale_prices = db["resale_prices"]
-    return resale_prices
+    global db_object
+    if db_object is None:
+        PATH = os.getcwd() + '\\data\\'
+        CONNECTION_STR = ""
+        with open(PATH + '/access_url.txt', 'r') as f:
+            CONNECTION_STR = f.readline()
+        print(CONNECTION_STR)
+        initial_time = datetime.now()
+        client = MongoClient(CONNECTION_STR)
+        print(f"Connected to MongoDB client in {(datetime.now() - initial_time).total_seconds()}")
+        db = client.test
+        db_object = db["resale_prices"]
+
+    return db_object
 
 
 def get_csv_as_pd():
