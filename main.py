@@ -1,9 +1,14 @@
 import eel
-from jmespath import search
 import pandas as pd
 import json
+from bson.json_util import dumps # converts mongodb cursor into python suitable 
 import glob
 import os
+from pymongo import MongoClient # pip install "pymongo[srv]"
+from datetime import datetime
+
+
+db_object = None
 
 
 def pd_to_json(df):
@@ -11,6 +16,24 @@ def pd_to_json(df):
     result = df.to_json(orient="index")
     parsed = json.loads(result)
     return parsed
+
+def get_db():
+    """helper function, returns the resale price table as an object to run operations (like querying) on"""
+    global db_object
+    if db_object is None:
+        PATH = os.getcwd() + '\\data\\'
+        CONNECTION_STR = ""
+        with open(PATH + '/access_url.txt', 'r') as f:
+            CONNECTION_STR = f.readline()
+        print(CONNECTION_STR)
+        initial_time = datetime.now()
+        client = MongoClient(CONNECTION_STR)
+        print(f"Connected to MongoDB client in {(datetime.now() - initial_time).total_seconds()}")
+        db = client.test
+        db_object = db["resale_prices"]
+
+    return db_object
+
 
 def get_csv_as_pd():
     """helper function, converts all data rows in all csv files in the "data" folder into a single python dataframe"""
@@ -20,82 +43,139 @@ def get_csv_as_pd():
     df = pd.concat((pd.read_csv(f) for f in csv_files), ignore_index=True)
     return df
 
-@eel.expose
-def say_hello_py(x):
-    print('Hello from %s' % x)
-
-@eel.expose
-def test_df():
-    d = {'col1': [1, 2], 'col2': [3, 4]}
-    df = pd.DataFrame(data=d)
-    return pd_to_json(df)
 
 @eel.expose
 def get_dropdown_values(input_df = None, column_names = []):
     """retrieves all unique data from specified columns in the .csv file containing dataset"""
     output_dict = {}
-    if len(column_names) > 0:
-
-        if input_df == None:
-            input_df = get_csv_as_pd()
-
-        for name in column_names:
-            if name in input_df.columns:
-                output_dict[name] = list(input_df[name].unique())
-            else:
-                print(f"{name} is not a valid column.\n Column list:{input_df.columns}\n")
-        return json.loads(json.dumps(output_dict, indent = 4))
+    db = get_db()
+    if len(column_names) > 0:  # checks if columns were added in the function args 
+        initial_time = datetime.now()
+        for key in column_names: # for every column name
+            distinct_value_list = db.distinct(key) # get all distinct values of each column name
+            output_dict[key] = distinct_value_list # insert key name with distinct values in dict
+        print(f"Done collating unique values in {(datetime.now() - initial_time).total_seconds()}")
+        return output_dict
     else:
+        # if no columns were specified, this function is useless
         print("No columns specified in function. Aborting....")
         return None
-         
+    # sample result: { flat_type: (7) […], town: (27) […], street_name: (579) […], flat_model: (21) […], month: (393) […] }
+    # if len(column_names) > 0:
+
+    #     if input_df == None:
+    #         input_df = get_csv_as_pd()
+
+    #     for name in column_names:
+    #         if name in input_df.columns:
+    #             output_dict[name] = list(input_df[name].unique())
+    #         else:
+    #             print(f"{name} is not a valid column.\n Column list:{input_df.columns}\n")
+    #     return json.loads(json.dumps(output_dict, indent = 4))
+    # else:
+    #     print("No columns specified in function. Aborting....")
+    #     return None
+    
+
+
 
 @eel.expose
-def query_csv(search_query_dict = None, max_rows = 2000):
-    """retrieves data from .csv file containing dataset. returns data as JSON to allow the Javascript code to handle the data as an object"""
-    df = get_csv_as_pd()
+def query_db(search_query_dict, result_limit = 2000):
+    DATE_COLUMN_NAME = "month"
+    data_table = get_db()
+    
+    # If we are getting everything, query dict should be an empty dict {}
+    # sample query appearance:
 
-    if search_query_dict: # if there is a JSON object added into the parameters
-        # https://www.geeksforgeeks.org/python-filtering-data-with-pandas-query-method/ for multiple query method
-        
-        print(search_query_dict)
-        # conditions = []
-        for key,value in search_query_dict.items():
-            # conditions.append(df[key].str.contains(value))
-
-            if value and "month_" in key: # special condition, if user is trying to set a date filter range
+    # "$and" : [{
+    #                 "center_id" : { "$eq" : 11}
+    #             },
+    #             {
+    #                 "meal_id" : { "$ne" : 1778}
+    #             }]
+    initial_time = datetime.now()
+    if search_query_dict:  
+        # if a query dict is specified, the code here runs to filter results
+        query_list = []
+        # search_query_dict format is { column_name : {"search_type": "...", "value": "..."} }
+        for key,value in search_query_dict.items():  # for each *column to search* : *search value*
+            search_value = value["value"]
+            if search_value and "month_" in key: 
+                # special condition, if user is trying to set a date filter range
+                # column name value will either be month_earliest or month_latest
                 if key == "month_earliest":
-                    df = df[df["month"] >= value]
+                    query_list.append({DATE_COLUMN_NAME: {"$gte": search_value}})
                 if key == "month_latest":
-                    df = df[df["month"] <= value]
-                print(f"Filtered. Nuber of rows: {len(df.index)}")
+                    query_list.append({DATE_COLUMN_NAME: {"$lte": search_value}})
+                
+            elif search_value:
+                if value["search_type"] == "match_text":
+                    # must match value. Acceptable to use here, since dropdowns take values from the data itself
+                    query_list.append({key: {"$eq": search_value}}) 
+                else:
+                    # as a catch-all, if i do not specify the search_type value
+                    query_list.append({key: {"$regex" : f".*{search_value}.*"}}) # search if string contains, case insensitive
 
-            elif value and key in df.columns: # if value is not empty, and if column name exists in dataframe
-                print(key)
-                print(value)
-                df = df[df[key].astype(str).str.contains(value)]
-                print(f"Filtered. Nuber of rows: {len(df.index)}")
+        # search_query_dict = {})
+        print(query_list)
+        cursor = data_table.find({"$and" : query_list}, limit=result_limit, projection={'_id': False}).sort("month", -1)
+        # exclude _id column, sort by month descending
+    else:
+        # else, get everything, limit results via result_limit
+        cursor = data_table.find({}, limit=result_limit,  projection={'_id': False}).sort("month", -1)
+    print(f"Query done in {(datetime.now() - initial_time).total_seconds()}")
+    initial_time = datetime.now()
+    result = json.loads(dumps(cursor))
+    print(f"JSON conversion done in {(datetime.now() - initial_time).total_seconds()}")
+    print(len(result))
+    return result
+
+# @eel.expose
+# def query_csv(search_query_dict = None, max_rows = 2000):
+#     """retrieves data from .csv file containing dataset. returns data as JSON to allow the Javascript code to handle the data as an object"""
+#     df = get_csv_as_pd()
+
+#     if search_query_dict: # if there is a JSON object added into the parameters
+#         # https://www.geeksforgeeks.org/python-filtering-data-with-pandas-query-method/ for multiple query method
+        
+#         print(search_query_dict)
+#         # conditions = []
+#         for key,value in search_query_dict.items():
+#             # conditions.append(df[key].str.contains(value))
+
+#             if value and "month_" in key: # special condition, if user is trying to set a date filter range
+#                 if key == "month_earliest":
+#                     df = df[df["month"] >= value]
+#                 if key == "month_latest":
+#                     df = df[df["month"] <= value]
+#                 print(f"Filtered. Nuber of rows: {len(df.index)}")
+
+#             elif value and key in df.columns: # if value is not empty, and if column name exists in dataframe
+#                 print(key)
+#                 print(value)
+#                 df = df[df[key].astype(str).str.contains(value)]
+#                 print(f"Filtered. Nuber of rows: {len(df.index)}")
 
             
         
-        # sample search_query_json = {
-        #     "month": "",
-        #     "town": "",
-        #     "flat_type": "",
-        #     "street_name": "",
-        #     "storey_range": "",
-        #     "floor_area_sqm": "",
-        #     "flat_model": "",
-        #     "lease_commencement_date": "",
-        #     "resale_price": "",
-        #     "remaining_lease": ""
-        # }
+#         # sample search_query_json = {
+#         #     "month": "",
+#         #     "town": "",
+#         #     "flat_type": "",
+#         #     "street_name": "",
+#         #     "storey_range": "",
+#         #     "floor_area_sqm": "",
+#         #     "flat_model": "",
+#         #     "lease_commencement_date": "",
+#         #     "resale_price": "",
+#         #     "remaining_lease": ""
+#         # }
     
-    print(df["month"].min())
-    print(df["month"].max())
-    df = df.iloc[:max_rows]  # determines max rows shown
+#     print(df["month"].min())
+#     print(df["month"].max())
+#     df = df.iloc[:max_rows]  # determines max rows shown
     
-    return pd_to_json(df)
+#     return pd_to_json(df)
 
 
 
@@ -105,8 +185,7 @@ if __name__ == "__main__":
     eel.init('web', allowed_extensions=['.js', '.html'])
     # mode value depends on preferred browser. should find a way to implement our own browser check
     print("main.py running") 
-    say_hello_py('Python World!')
-    eel.say_hello_js('Python World!2')   # Call a Javascript function. the results are queued then displayed the moment the webpage starts up
+    # Call a Javascript function. the results are queued then displayed the moment the webpage starts up
     eel.start('main.html', mode="chrome-app") # code seems to pause here while website is running.
 
 
