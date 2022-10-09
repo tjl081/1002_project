@@ -11,19 +11,42 @@
     integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
 
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.css">
-  
+
+
     <title>My Website</title>
     <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
     <link rel="icon" href="./favicon.ico" type="image/x-icon">
-  </head>
-  <body>
-    <main>
-        
-    </main>
+</head>
+  
+<body>
+    <div class="header">
+      <div class="inner_header">
+        <div class="logo_container">
+          <h1>MY SITE</h1>
+      </div>
+      <ul class="navigation">
+            <a>
+              <li>Home</li>
+            </a>
+            <a>
+              <li>Compare Results</li>
+            </a>
+            <a>
+              <li>Favourites</li>
+            </a>
+            <a>
+              <li>Help</li>
+            </a>
+          </ul>
+    </div>
 
     <div class="container" >
       
+      
+
       <div class="form-row">
+
         <div class="form-group col-md-2">
           <label for="inputEarliestDate">Earliest date</label>
           <select data-field="month_earliest" search-type="date_earliest" id="inputEarliestDate" class="data-query form-control">
@@ -36,9 +59,6 @@
             <option>-- Any --</option>
           </select>
         </div>
-      </div>
-
-      <div class="form-row">
         <div class="form-group col-md-4">
           <label for="inputFlatType">Flat Type</label>
           <select data-field="flat_type" search-type="match_text" id="inputFlatType" class="data-query form-control">
