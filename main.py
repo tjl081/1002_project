@@ -34,6 +34,12 @@ def get_csv_as_pd():
     df = pd.concat((pd.read_csv(f) for f in csv_files), ignore_index=True)
     return df
 
+def json_to_csv():
+    #jsonpath = Path('file.json')                           # absolute path to json file
+    pdObj = pd.read_json('export.json', orient='index')     #reading the json file
+    pdObjj=pd.json_normalize(pdObj)                         #creating the dataframe
+    csvData = pdObjj.to_csv('datafile.csv', index=False)    # converted a file to csv
+    return csvData
 
 @eel.expose
 def get_dropdown_values(input_df = None, column_names = []):
@@ -179,6 +185,5 @@ if __name__ == "__main__":
 
 # we constantly fetch data from the CSV with every user query. while this seems inefficient, it is the only way (i know) to get live data.
 # also easier integration when converting to database access
-
 
 #test
