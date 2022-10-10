@@ -19,6 +19,7 @@
   <link rel="icon" href="./favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="/css/loader.css">
 </head>
+
 <body>
   <div class="header">
     <div class="inner_header">
@@ -113,35 +114,39 @@
 
 
   <section>
-    <ul class="nav nav-tabs">
-      <li class="active"><a data-toggle="tab" href="#main-table">Table</a></li>
-      <li><a data-toggle="tab" href="#graph">Graph</a></li>
-    </ul>
+    <!-- <ul class="nav nav-tabs">
+      <li class="tablinks" ><a data-toggle="tab" href="#main-table">Table</a></li>
+      <li class="tablinks"><a data-toggle="tab" href="#graph">Graph</a></li>
+    </ul> -->
+    <div class="tab">
+      <button class="tablinks" onclick="toggletabs(event, 'main-table')" id="defaultOpen">Table</button>
+      <button class="tablinks" onclick="toggletabs(event, 'graph')">Graph</button>
+    </div>
     <div class="loader"></div>
-    <div class="tab-content">
-      <div class="container">
-        <table id="main-table" class="table table-striped" data-toggle="table" data-toolbar="#toolbar" data-height="460"
-          hidden>
-          <thead>
-            <tr>
-              <!-- <th data-field="id">Item ID</th>
+    <div class="table">
+      <!-- <div class="container"> -->
+      <table id="main-table" class="tab-content" data-toggle="table" data-toolbar="#toolbar" data-height="460" hidden>
+        <thead>
+          <tr>
+            <!-- <th data-field="id">Item ID</th>
                     <th data-field="name">Item Name</th>
                     <th data-field="price">Item Price</th> -->
-            </tr>
-          </thead>
-          <tbody>
+          </tr>
+        </thead>
+        <tbody>
 
-          </tbody>
-        </table>
-        <a href="/resources/queryData.csv" download>Download CSV of the above table</a>
-      </div>
-
-      <div class="container">
-        <div id="graph">
-          <img src="/resources/heatmap.jpg" alt="graph">
-        </div>
-      </div>
+        </tbody>
+      </table>
+      <a href="/resources/queryData.csv" download>Download CSV of the above table</a>
+      <!-- </div> -->
     </div>
+    <!-- <div class="tab-content"> -->
+    <!-- <div class="container"> -->
+    <div id="graph" class="tab-content">
+      <!-- <img src="/resources/heatmap.jpg" alt="graph"> -->
+    </div>
+    <!-- </div> -->
+    <!-- </div> -->
   </section>
 
   <div class="navbar fixed-bottom" style="padding-bottom: 70px;"></div>
@@ -164,3 +169,24 @@
 </body>
 
 </html>
+
+
+<script>
+  document.getElementById("defaultOpen").click();
+
+  //function to toggle between table & graph
+  function toggletabs(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    // document.getElementById("main-table_wrapper").style.display = "none";
+    evt.currentTarget.className += " active";
+  }
+</script>
