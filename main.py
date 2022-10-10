@@ -6,9 +6,11 @@ import glob
 import os
 from pymongo import MongoClient # pip install "pymongo[srv]"
 from datetime import datetime
+from MLModel import ML_Model
 
 
 db_object = None
+machine_learning = None
 
 
 def pd_to_json(df):
@@ -43,6 +45,22 @@ def get_csv_as_pd():
     df = pd.concat((pd.read_csv(f) for f in csv_files), ignore_index=True)
     return df
 
+
+@eel.expose
+def init_ml_model():
+    """Sets the regression model into the global variable"""
+    global machine_learning
+    if not machine_learning:
+        machine_learning = ML_Model()
+
+
+@eel.expose
+def get_predicted_value(input_list):
+    global machine_learning
+    df = pd.DataFrame(input_list)
+    result = machine_learning.predict_values(df)
+    print("The predicted value(s) is/are:")
+    print(result)
 
 @eel.expose
 def get_dropdown_values(input_df = None, column_names = []):

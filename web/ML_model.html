@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css"
+    integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.css">
+
+
+    <title>House Price Prediction (Experimental)</title>
+    <!-- <link rel="stylesheet" href="/styles.css"> -->
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="inner_header">
+            <div class="logo_container">
+                <h1>MY SITE</h1>
+            </div>
+            <ul class="navigation">
+                <a>
+                <li>Home</li>
+                </a>
+                <a>
+                <li>Compare Results</li>
+                </a>
+                <a>
+                <li>Favourites</li>
+                </a>
+                <a>
+                <li>Help</li>
+                </a>
+                <a href="ML_model.html" class="link-primary">
+                <li>Resale Price Prediction</li>
+                </a>
+            </ul>
+        </div>
+        
+    </div>
+    
+    <div class="container">
+        <div class="form-row">
+            <div class="form-group col-md-2">
+                <label for="inputEarliestDate">Earliest date</label>
+                <select data-field="month_earliest" search-type="date_earliest" id="inputEarliestDate" class="data-query form-control">
+                <option>-- Any --</option>
+                </select>
+            </div>
+            <div class="form-group col-md-2">
+                <label for="inputLatestDate">Latest date</label>
+                <select data-field="month_latest" search-type="date_latest" id="inputLatestDate" class="data-query form-control">
+                <option>-- Any --</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <div>
+        <button type="button" id="init_ml_model" class="btn btn-primary">Start Price Prediction Model</button>
+    </div>
+    
+    <div class="navbar fixed-bottom" style="padding-bottom: 70px;"></div>
+
+    <script type="text/javascript" src="/eel.js"></script>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+        integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+        crossorigin="anonymous"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"
+        integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
+        crossorigin="anonymous"></script>
+        <script type="text/javascript" src="/ml_model_frontend.js"></script>
+
+</body>
+
+</html>
