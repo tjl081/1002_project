@@ -121,6 +121,9 @@ function populate_main_table(df) {
   column_count = 0 // number of columns to show up on table
   //exclude_column_count = 0 // number of columns to hide from table. value used to offset condition to check if a row has the right number of column values 
   column_header_list = []
+
+  //hide loading animation before table populated
+  $(".loader").hide();
   //generate headers
   for (var key of Object.keys(df[0])) {
     //console.log(key + " -> " + df[0][key])
@@ -178,7 +181,6 @@ $(document).ready( function () { // runs when the webpage loads
   console.log(1)
   eel.query_db(null)(populate_main_table)
   console.log(2)
-  
 } );
 
 $(".data-query").on("input", function() {
