@@ -27,12 +27,23 @@ def get_db():
 
     return db_object
 
+def remove_columns(df, column_name_list):
+
+    for col in column_name_list:
+        if col in df.columns:
+            df = df.drop(col, axis=1)
+        else:
+            print(f"'{col}' column not found. skipping...")
+    return df
+
 def process_ml_data(df):
     """Helper function, fills up null values, standardises column data"""
     middle_floor_value = lambda min_floor_str, max_floor_str : int((int(max_floor_str) + int(min_floor_str)) / 2)
     initial_time = datetime.now()
+    counter = 1
     for index, row in df.iterrows():
-        
+        print(f"Iterating through row:{counter}")
+        counter += 1
         if "year" in str(row['remaining_lease']):
             # if remaining_lease contains words
             remaining_lease_text_list = row["remaining_lease"].split(" ") # split x years y months to ["x", "years", "y", "months"]
@@ -64,62 +75,84 @@ def process_ml_data(df):
     df['month'] = df['month'].map(datetime.toordinal)
     print(f"Data processing done in {(datetime.now() - initial_time).total_seconds()}")
 
-    return df
+    columns_to_remove = ['street_name', 'block']
+    result = remove_columns(df, columns_to_remove)
+
+    return result
 
 
-def categorise_ml_data(df, ce_list = None):
+def get_category_encoder_mapping(encoder, df):
+    """Function to produce a dictionary with the format { column_name : {unique_value : binary_encoding_list } }.
+    Requires original encoder (which should contain all encoded values) and the original dataset as a dataframe (to extract all unique values of a column)"""
+    encoder_params = encoder.get_params()
+    output_dict = {}
+    for col_name in encoder_params["cols"]:
+        unique_values = df[col_name].unique()
+        mapping_df = [m["mapping"] for m in encoder_params["mapping"] if m['col'] == col_name][0]
+    
+        value_to_encoded = {}
+        counter = 0
+        for value in unique_values:
+            value_to_encoded[value] = mapping_df.iloc[counter].values.tolist()
+            counter += 1
+        output_dict[col_name] = value_to_encoded
+    return output_dict
+
+
+def categorise_ml_data(df, encoder_mapping = None):
     """Convert columns with categorical data (e.g. town, flat type) """
         
     # encode categorical data: town, flat type and flat model
     initial_time = datetime.now()
 
     # either binary or base-n, depending on how many extra columns you need to show categorical data
-    if not ce_list:
+    if not encoder_mapping:
         print("CATEGORY ENCODERS EMPTY. GENERATING NEW")
-        ce_list = []
+        # encoder = {}
         encode_columns = ['town', 'flat_type', 'flat_model']
-        for col in encode_columns:
-            ce_list.append(ce.BinaryEncoder(cols=[col]))
+        category_encoder = ce.BinaryEncoder(cols=encode_columns)
+        
+        transformed_df = category_encoder.fit_transform(df)
+        encoder_mapping = get_category_encoder_mapping(category_encoder, df)
+        print(encoder_mapping)
+        # encoder = get_category_encoder_mapping()
 
         # ce_town = ce.BinaryEncoder(cols=['town']) 
         # ce_flat_type = ce.BinaryEncoder(cols=['flat_type']) 
         # ce_flat_model = ce.BinaryEncoder(cols=['flat_model'])
     else:
-        print("CATEGORY ENCODERS EXIST, DETAILS BELOW.")
-        for en in ce_list:
-            print(en.get_params())
+        print("ENCODER MAPPINGS EXIST, DETAILS BELOW.")
+        print(encoder_mapping)
 
-    
-    for category_encoder in ce_list:
-        df = category_encoder.fit_transform(df)
-    
-    for en in ce_list:
-            print(en.get_params())
+        for col in encoder_mapping: # for each column i have to manually encode
+            value_to_change = df.iloc[0][col]
+            print(f"Column: {col}\nValue to change: {value_to_change}\nEncoded value: {encoder_mapping[col][value_to_change]}")
+            counter = 0
+            # index_target = df.columns.get_loc(col) # for each encode column to store binary numbers i have to add
+            for encoder_column in encoder_mapping[col][value_to_change]:
+                df.insert(df.columns.get_loc(col), f'{col}_{counter}', encoder_column)
+                counter += 1
+            df = df.drop(columns=[col])  # remove original column
+        transformed_df = df
+    # for en in ce_list:
+    #         print(en.get_params())
 
     print(f"Categorical data conversion done in {(datetime.now() - initial_time).total_seconds()}")
 
-    return {"dataframe" : df, 
-    "encoder_list" : ce_list}
+    return {"dataframe" : transformed_df, "encoder_mapping" : encoder_mapping}
 
 
-def remove_columns(df, column_name_list):
-
-    for col in column_name_list:
-        if col in df.columns:
-            df = df.drop(col, axis=1)
-        else:
-            print(f"'{col}' column not found. skipping...")
-    return df
 
 
-def clean_data(df, encoder_list):
-    """Processes data (standardising data format, removing columns deemed unnecessary 
-    and converting categorical data into numbers for regression model.
-    Returns both the cleaned data and a dictionary containing all category encoders used."""
-    df = process_ml_data(df)
-    columns_to_remove = ['street_name', 'block']
-    result = categorise_ml_data(remove_columns(df, columns_to_remove), encoder_list)
-    return result
+
+# def clean_data(df, encoder_list):
+#     """Processes data (standardising data format, removing columns deemed unnecessary 
+#     and converting categorical data into numbers for regression model.
+#     Returns both the cleaned data and a dictionary containing all category encoders used."""
+#     df = process_ml_data(df)
+#     columns_to_remove = ['street_name', 'block']
+#     result = categorise_ml_data(remove_columns(df, columns_to_remove), encoder_list)
+#     return result
 
 
 class ML_Model:
@@ -129,13 +162,28 @@ class ML_Model:
         print("Initialising connection to database")
         db_obj = get_db()
         initial_time = datetime.now()
-        cursor = db_obj.find({}, projection={'_id': False})
+        cursor = db_obj.find({}, limit=20000, projection={'_id': False})
         print(f"Query done in {(datetime.now() - initial_time).total_seconds()}")
-        result = json.loads(dumps(cursor))
-
-        result = clean_data(pd.DataFrame(result), None)
+        print("Next")
+        counting = 1
+        
+        # for e in cursor:
+        #     print(counting)
+        #     counting += 1
+            
+        result = dumps(cursor)
+        print("Dump done")
+        print(result[:100])
+        result = json.loads(result)
+        print(type(result))
+        initial_time = datetime.now()
+        # result = clean_data(pd.DataFrame(result), None)
+        print("Processing data")
+        result = process_ml_data(pd.DataFrame(result))
+        result = categorise_ml_data(result, None)
+        print(f"Result processed in {(datetime.now() - initial_time).total_seconds()}")
         df = result["dataframe"]
-        self.encoder_list = result["encoder_list"]
+        self.encoder_mapping = result["encoder_mapping"]
 
         cols = list(df.columns.values) #Make a list of all of the columns in the df
         cols.pop(cols.index('resale_price'))
@@ -165,12 +213,15 @@ class ML_Model:
         print("R2: ",r2_score(y_test,predicted_result))
         print("RMSE: ",polynomial_regression.score(x_test,y_test))
         print(f"Model trained and evaluated in {(datetime.now() - initial_time).total_seconds()}")
-        for en in self.encoder_list:
-            print(en.get_params())
+        
         self.model = polynomial_regression
 
     def predict_values(self, df):
-        processed_df = clean_data(df, self.encoder_list)["dataframe"]
+        # processed_df = clean_data(df, self.encoder_list)["dataframe"]
+
+        result = process_ml_data(pd.DataFrame(df))
+        processed_df = categorise_ml_data(result, self.encoder_mapping)["dataframe"]
+        print(processed_df)
 
         print(processed_df.head(3))
         poly_features = preprocessing.PolynomialFeatures(degree=3)

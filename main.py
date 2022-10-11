@@ -61,6 +61,7 @@ def get_predicted_value(input_list):
     result = machine_learning.predict_values(df)
     print("The predicted value(s) is/are:")
     print(result)
+    return result[0] # result comes out as list
 
 @eel.expose
 def get_dropdown_values(input_df = None, column_names = []):

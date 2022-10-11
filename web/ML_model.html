@@ -48,24 +48,65 @@
     </div>
     
     <div class="container">
+
+        <h1 class="display-2">Resale flat details</h1>
+
         <div class="form-row">
             <div class="form-group col-md-2">
-                <label for="inputEarliestDate">Earliest date</label>
-                <select data-field="month_earliest" search-type="date_earliest" id="inputEarliestDate" class="data-query form-control">
-                <option>-- Any --</option>
-                </select>
+                <label for="inputYear">Year</label>
+                <input data-field="date_year" search-type="" type="text" class="data-query form-control" id="inputYear">
             </div>
             <div class="form-group col-md-2">
-                <label for="inputLatestDate">Latest date</label>
-                <select data-field="month_latest" search-type="date_latest" id="inputLatestDate" class="data-query form-control">
-                <option>-- Any --</option>
+                <label for="inputMonth">Month</label>
+                <input data-field="date_month" search-type="" type="text" class="data-query form-control" id="inputMonth">
+            </div>
+            <div class="form-group col-md-4">
+                <label for="inputBlock">Block</label>
+                <input data-field="block" search-type="" type="text" class="data-query form-control" id="inputBlock">
+            </div>
+            <div class="form-group col-md-4">
+                <label for="inputFlatType">Flat Type</label>
+                <select data-field="flat_type" search-type="match_text" id="inputFlatType" class="data-query form-control">
+                  <option>-- Any --</option>
                 </select>
             </div>
+            <div class="form-group col-md-4">
+                <label for="inputTown">Town</label>
+                <select data-field="town" search-type="match_text" id="inputTown" class="data-query form-control">
+                  <option>-- Any --</option>
+                </select>
+              </div>
+            <div class="form-group col-md-4">
+                <label for="inputStreetName">Street Name</label>
+                <select data-field="street_name" search-type="match_text" id="inputStreetName" class="data-query form-control">
+                  <option>-- Any --</option>
+                </select>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="inputStoreyRange">Storey range</label>
+                <input data-field="storey_range" search-type="" type="text" class="data-query form-control" id="inputStoreyRange">
+            </div>
+            <div class="form-group col-md-4">
+                <label for="inputFloorArea">Floor area (square metre)</label>
+                <input data-field="floor_area_sqm" search-type="" type="text" class="data-query form-control" id="inputFloorArea">
+            </div>
+            <div class="form-group col-md-4">
+                <label for="inputFlatModel">Flat Model</label>
+                <select data-field="flat_model" search-type="match_text" id="inputFlatModel" class="data-query form-control">
+                  <option>-- Any --</option>
+                </select>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="inputRemainingLease">Remaining lease (nearest year)</label>
+                <input data-field="remaining_lease" search-type="" type="text" class="data-query form-control" id="inputRemainingLease">
+            </div>
+
         </div>
     </div>
     
-    <div>
-        <button type="button" id="init_ml_model" class="btn btn-primary">Start Price Prediction Model</button>
+    <div class="container">
+        <button type="button" id="init_ml_model" class="btn btn-primary" disabled>Predict price</button>
+        <div id="prediction_output"></div>
     </div>
     
     <div class="navbar fixed-bottom" style="padding-bottom: 70px;"></div>
