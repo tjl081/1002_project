@@ -176,20 +176,20 @@ def query_db(search_query_dict, result_limit = 2000):
     result = json.loads(dumps(cursor))
     print(f"JSON conversion done in {(datetime.now() - initial_time).total_seconds()}")
 
-    csvFormat(result)
     return result
     
     # 2000
+@eel.expose
 def csvFormat(data): 
-    with open('queryData.csv', 'w') as file:
-        writer = csv.writer(file)
-        writer.writerow(data)
-    # # clear contents of file
-    # file.truncate()
-    # # disable write read on file
-    # file.close()
-        
 
+    PATH = os.getcwd() + '\\web\\resources\\'
+    key = data[0].keys()
+    
+    with open(PATH + 'queryData.csv', 'w', newline='') as file:
+        writer = csv.DictWriter(file, key)
+        writer.writeheader()
+        writer.writerows(data)
+        
 
 # @eel.expose
 # def query_csv(search_query_dict = None, max_rows = 2000):

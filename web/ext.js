@@ -2,7 +2,7 @@
 // for the page
 
 var async_counter = 0
-
+var export_df=null
 console.log("js file linked");
 
 
@@ -45,6 +45,7 @@ async function query_data() {
 
   async_counter += 1 // flag to indicate if there are running async functions
   let df = await eel.query_db(input_dict)()
+  export_df=df
   console.log(df)
   console.log(typeof df)
   // //let df = await eel.query_csv(input_dict)()
@@ -112,7 +113,7 @@ function populate_dropdown(dropdown_json) {
 
 
 function populate_main_table(df) {
-
+  export_df=df
   console.log("populating main table")
   console.log(df)
   console.log(typeof df)
@@ -178,6 +179,10 @@ function populate_main_table(df) {
 function displaygraph() { //prediction graph
   eel.heatmap_plot();
   $('#graph').append(`<img src= "/resources/heatmap.jpg">`);
+}
+
+function downloadCSV() {
+  eel.csvFormat(export_df);
 }
 
 //EVENT LISTENERS
