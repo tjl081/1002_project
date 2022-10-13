@@ -173,20 +173,26 @@ def query_db(search_query_dict, result_limit = 2000):
     result = json.loads(dumps(cursor))
     print(f"JSON conversion done in {(datetime.now() - initial_time).total_seconds()}")
 
+    # csvFormat(result)
+
     csvFormat(result)
     return result
+
     
     # 2000
 def csvFormat(data): 
     with open('queryData.csv', 'w') as file:
         writer = csv.writer(file)
+        for i in data:
+            # for k,v in i:
+            # print(i)
+            for j in i:
+                print(j[0])
+                # writer.writerow(i["month"])
+    with open('test.csv','w') as file:
+        writer = csv.writer(file)
         writer.writerow(data)
-    # # clear contents of file
-    # file.truncate()
-    # # disable write read on file
-    # file.close()
         
-
 
 # @eel.expose
 # def query_csv(search_query_dict = None, max_rows = 2000):
