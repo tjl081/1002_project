@@ -32,8 +32,68 @@ async function predict_resale_values(housing_data){
     
 }
 
+async function generate_graph(housing_data){
+    result = await eel.get_prediction_graph(housing_data, 3)()
+    console.log(result)
+    $("#prediction_graph").attr("src",result);
+    // $("#prediction_output").text("The predicted price of the flat is:" + result)
+}
+
+
 function enable_predict_button(){
-    $("#init_ml_model").prop('disabled', false);
+    $(".ml_button").prop('disabled', false);
+    
+}
+
+
+function retrieve_field_values(){
+  // test_data = [{
+    //     "month" : "2019-05",
+    //     "town": "ANG MO KIO",
+    //     "flat_type": "5 ROOM",
+    //     "block": "351",
+    //     "street_name": "ANG MO KIO ST 32",
+    //     "storey_range": "13 TO 15",
+    //     "floor_area_sqm": "110",
+    //     "flat_model": "IMPROVED",
+    //     "lease_commence_date": "2001",
+    //     "remaining_lease": "81 years 04 months"
+    // }]
+
+    data_template = {
+      "month" : null,
+      "town": null,
+      "flat_type": null,
+      "block": null,
+      "street_name": null,
+      "storey_range": null,
+      "floor_area_sqm": null,
+      "flat_model": null,
+      "lease_commence_date": null,
+      "remaining_lease": null
+  }
+
+  input_data = {}
+
+  $('.data-query').each(function(index, element) {
+      // refer to HTML to see what data-field and search-type means
+      column_name = $(element).attr("data-field") 
+      input_value = $(element).val()
+
+      input_data[column_name] = input_value
+  })
+  input_data["month"] = input_data["date_year"] + "-" + input_data["date_month"]
+  input_data["lease_commence_date"] = parseInt(input_data["remaining_lease"]) + parseInt(input_data["date_year"]) - 99
+
+  input_data["storey_range"] = input_data["storey_range_min"] + " TO " + input_data["storey_range_max"]
+
+  delete input_data["date_year"]
+  delete input_data["date_month"]
+  delete input_data["storey_range_min"]
+  delete input_data["storey_range_max"]
+  input_data = Object.assign(data_template, input_data)
+  console.log(input_data)
+  return input_data
 }
 
 $(document).ready( function () { // runs when the webpage loads
@@ -48,48 +108,13 @@ $(document).ready( function () { // runs when the webpage loads
 
 $("#init_ml_model").on("click", function() {
     
-    // test_data = [{
-    //     "month" : "2019-05",
-    //     "town": "ANG MO KIO",
-    //     "flat_type": "5 ROOM",
-    //     "block": "351",
-    //     "street_name": "ANG MO KIO ST 32",
-    //     "storey_range": "13 TO 15",
-    //     "floor_area_sqm": "110",
-    //     "flat_model": "IMPROVED",
-    //     "lease_commence_date": "2001",
-    //     "remaining_lease": "81 years 04 months"
-    // }]
-
-    data_template = {
-        "month" : null,
-        "town": null,
-        "flat_type": null,
-        "block": null,
-        "street_name": null,
-        "storey_range": null,
-        "floor_area_sqm": null,
-        "flat_model": null,
-        "lease_commence_date": null,
-        "remaining_lease": null
-    }
-
-    input_data = {}
-
-    $('.data-query').each(function(index, element) {
-        // refer to HTML to see what data-field and search-type means
-        column_name = $(element).attr("data-field") 
-        input_value = $(element).val()
-
-        input_data[column_name] = input_value
-    })
-    input_data["month"] = input_data["date_year"] + "-" + input_data["date_month"]
-    input_data["lease_commence_date"] = parseInt(input_data["remaining_lease"]) + parseInt(input_data["date_year"]) - 99
-
-    delete input_data["date_year"]
-    delete input_data["date_month"]
-    input_data = Object.assign(data_template, input_data)
-    console.log(input_data)
-    predict_resale_values([input_data])
+    values = retrieve_field_values()
+    predict_resale_values(values)
     
   });
+
+$("#get_ml_graph").on("click", function() {
+  values = retrieve_field_values()
+  generate_graph(values)
+})
+  

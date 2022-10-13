@@ -7,6 +7,9 @@ import os
 from pymongo import MongoClient # pip install "pymongo[srv]"
 from datetime import datetime
 from MLModel import ML_Model
+import chart_studio
+import plotly.express as px
+import chart_studio.plotly as py
 
 
 db_object = None
@@ -57,11 +60,61 @@ def init_ml_model():
 @eel.expose
 def get_predicted_value(input_list):
     global machine_learning
-    df = pd.DataFrame(input_list)
+    # note: input_list must must be a list of dictionaries, with each dict representing each row
+    df = pd.DataFrame([input_list])
     result = machine_learning.predict_values(df)
     print("The predicted value(s) is/are:")
     print(result)
     return result[0] # result comes out as list
+
+
+@eel.expose
+def get_prediction_graph(input_row, years_ahead):
+    global machine_learning
+    # note: input_list must must be a list of dictionaries, with each dict representing each row
+    months_to_iterate = int(years_ahead) * 12
+    e = input_row.copy()
+    input_list = [e]
+    date_val = input_row["month"].split("-")
+    year_val = int(date_val[0])
+    month_val = int(date_val[1])
+
+    for i in range(months_to_iterate):
+        
+        if month_val >= 12:
+            year_val += 1
+            month_val = 1
+        else:
+            month_val += 1
+        input_row["month"] = str(year_val) + "-" + str(month_val)
+        temp_dict = input_row.copy()
+        input_list.append(temp_dict)
+
+    date_list = [e["month"] for e in input_list]
+    print(f"Date list: {date_list}")
+    df = pd.DataFrame(input_list)
+    print(df.head(3))
+    print(df.tail(3))
+    result = machine_learning.predict_values(df)
+    print("The predicted value(s) is/are:")
+    print(result)
+    prediction_graph_df = pd.DataFrame(
+        {
+            "date" : date_list,
+            "predicted_price" : result
+        })
+    print(prediction_graph_df.head(2))
+    print(prediction_graph_df.tail(2))
+    print(len(prediction_graph_df.index))
+    
+
+    fig = px.line(prediction_graph_df, x='date', y='predicted_price')
+    url = py.plot(fig, filename = 'prediction_graph', auto_open=False)
+    print(url)
+    return url
+    # test result output
+    # return result[0] # result comes out as list
+
 
 @eel.expose
 def get_dropdown_values(input_df = None, column_names = []):
@@ -203,6 +256,7 @@ if __name__ == "__main__":
     
     eel.init('web', allowed_extensions=['.js', '.html'])
     # mode value depends on preferred browser. should find a way to implement our own browser check
+    chart_studio.tools.set_credentials_file(username='tjl081', api_key='3aQmYk1TJQIdiao8Pqip')
     print("main.py running") 
     # Call a Javascript function. the results are queued then displayed the moment the webpage starts up
     eel.start('main.html', mode="chrome-app") # code seems to pause here while website is running.

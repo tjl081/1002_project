@@ -162,7 +162,7 @@ class ML_Model:
         print("Initialising connection to database")
         db_obj = get_db()
         initial_time = datetime.now()
-        cursor = db_obj.find({}, limit=20000, projection={'_id': False})
+        cursor = db_obj.find({"month": {"$gte": "2017-01"}}, projection={'_id': False})
         print(f"Query done in {(datetime.now() - initial_time).total_seconds()}")
         print("Next")
         counting = 1
