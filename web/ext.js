@@ -136,6 +136,7 @@ function populate_main_table(df) {
     //   exclude_column_count += 1
     // }
   }
+  $("#main-table thead tr").append(`<th>View</th>`);
 
   for (row_id in df) {
 
@@ -148,6 +149,8 @@ function populate_main_table(df) {
         //$( "#main-table tbody tr" ).append(`<th>${df[row_id][key]}</th>`);
         table_values_html += `<td>${df[row_id][key]}</td>`
       }
+
+      table_values_html += `<td><button onclick= "sendToView();">View</button></td>`
       $("#main-table tbody").append(`<tr>${table_values_html}</tr>`);//add a row
 
     }
@@ -188,7 +191,6 @@ $(document).ready(function () { // runs when the webpage loads
   // toggletabs();
   displaygraph();
   console.log(2)
-
 });
 
 $(".data-query").on("input", function () {
@@ -199,6 +201,15 @@ $(".data-query").on("input", function () {
   //contain_values = df[df['month'].str.contains('ju')]
 
 });
+
+function sendToView() {
+  window.location.href = 'view.html';
+}
+// function viewMap() {
+
+//   image = eel.displaymap();
+//   document.getElementById('imagestore').innerHTML = "<img src='" + image + "' />";
+// }
 
 // function toggletabs() {
 //   // $('#graph').hide()

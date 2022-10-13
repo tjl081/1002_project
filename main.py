@@ -5,6 +5,7 @@ from bson.json_util import dumps # converts mongodb cursor into python suitable
 import glob
 import os
 from pymongo import MongoClient # pip install "pymongo[srv]"
+from bson.objectid import ObjectId #mongodb objectid
 from datetime import datetime
 import csv
 import numpy as np
@@ -12,6 +13,8 @@ import matplotlib
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import sys
+import requests #pip install requests
+from geopy.geocoders import Nominatim # pip install geopy
 
 db_object = None
 
@@ -235,8 +238,50 @@ def csvFormat(data):
     
 #     return pd_to_json(df)
 
+def getPostalCode(streetName, block):
+    #initialize Nominatim API
+    geolocator = Nominatim(user_agent="geoapiExercises")
 
+    datatable = get_db()
+    geolocator = Nominatim(user_agent="geoapiExercises")
 
+    # datatable = get_db()
+    place =str(309)+ "," + "ANG MO KIO AVE 1"
+    location = geolocator.geocode(place)
+
+    #traverse the data
+    data = location.raw
+    loc_data = data['display_name'].split(',')
+    loc_data_new = []
+    for i in loc_data:
+        replaced = i.replace(' ','')
+        loc_data_new.append(replaced)
+    print(loc_data_new)
+    print(loc_data_new[-2])
+    return loc_data_new[-2]
+
+#returns the id of the record when user click into it
+@eel.expose
+def getRecordId(month,town,flat_type,block,street_name,storey_range,floor_area_sqm,flat_model,lease_commence_date,resale_price,remaining_lease):
+    data_table = get_db()
+    record = data_table.find_one({"month":month, "town":town,"flat_type":flat_type,"block":block,"street_name":street_name,"storey_range":storey_range,"floor_area_sqm":floor_area_sqm,"flat_model":flat_model,"lease_commence_date":lease_commence_date,"resale_price":resale_price,"remaining_lease":remaining_lease})
+    return record["_id"]
+
+#get the record details by id
+@eel.expose
+def getRecordByRecordId(id):
+    data_table = get_db()
+    # cursor = data_table.find({'_id': id})
+    # result = json.loads(dumps(cursor))
+    # return result
+    record = data_table.find_one({'_id': ObjectId(id) })
+    return record
+
+#display map
+# @eel.expose
+# def displayMap(postalcode):
+#     response = requests.get("https://developers.onemap.sg/commonapi/staticmap/getStaticImage?layerchosen=default&postal="+postalcode+"&zoom=17&height=512&width=512")
+#     return response
 
 if __name__ == "__main__":
     
