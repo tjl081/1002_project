@@ -100,3 +100,28 @@ section {
     margin: 0;
     padding: 40px;
 }
+
+table button {
+    margin: 0;
+    /* display: inline-block; */
+    /* padding: 15px 10px; */
+    font-size: 15px;
+    /* cursor: pointer; */
+    border: 0px solid #dddddd;
+    text-align: center;
+    text-decoration: none;
+    outline: none;
+    color: black;
+    border: none;
+    padding: 10%;
+    background-color: white;
+}
+
+table button:hover {
+    background-color: #ccc;
+}
+
+table button:active {
+    box-shadow: 0 5px #666;
+    transform: translateY(4px);
+}
