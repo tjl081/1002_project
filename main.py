@@ -117,14 +117,14 @@ def get_prediction_graph(input_row, years_ahead):
 
 
 @eel.expose
-def get_dropdown_values(input_df = None, column_names = []):
+def get_dropdown_values(column_names = [], query_dict = {}):
     """retrieves all unique data from specified columns in the .csv file containing dataset"""
     output_dict = {}
     db = get_db()
     if len(column_names) > 0:  # checks if columns were added in the function args 
         initial_time = datetime.now()
         for key in column_names: # for every column name
-            distinct_value_list = db.distinct(key) # get all distinct values of each column name
+            distinct_value_list = db.distinct(key, query_dict) # get all distinct values of each column name
             output_dict[key] = distinct_value_list # insert key name with distinct values in dict
         print(f"Done collating unique values in {(datetime.now() - initial_time).total_seconds()}")
         return output_dict

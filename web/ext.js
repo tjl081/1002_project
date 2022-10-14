@@ -6,6 +6,33 @@ var async_counter = 0
 console.log("js file linked");
 
 
+async function autoresolve_street_name(selected_street_name){
+  dropdown_column_names = ["street_name"] //specify all columns in dataset to pull unique values for
+  town_name = $('#inputTown').val()
+  street_name_filter_query = {}
+  if ($('#inputTown').prop('selectedIndex') != 0){
+    street_name_filter_query = {"town": town_name}
+  }
+
+  output_json = await eel.get_dropdown_values(dropdown_column_names, street_name_filter_query)()
+  populate_dropdown(output_json)
+  
+  $("#inputStreetName option").each(function()
+  {
+      option_val = $(this).val()
+      if (option_val == selected_street_name){
+        $('#inputStreetName').val(option_val)
+      }
+  });
+}
+
+function clear_dropdown(element_identifier){
+
+  selector_div = $(element_identifier);
+  selector_div.children('option').not('.placeholder').remove(); // clear all existing <option> elements in a dropdown
+
+}
+
 async function query_data(){
   //placeholder_str = "-- Any --"
   console.log("Input detected")
@@ -70,7 +97,18 @@ async function query_data(){
       }
       datatable.draw();
       console.log("datatable populated")
+      
+      // this section of code is for autoresolving the selected town name if the user
+      // selects the street_name directly
+      street_name_selected_index = $('#inputStreetName').prop('selectedIndex');
+      // town_selected_index = $('#inputTown').prop('selectedIndex');
+      if (street_name_selected_index != 0){ // so long as the street_name is selected, autoresolve town value
+        $('#inputTown').val(df[0]["town"]);
+        autoresolve_street_name();
+      }
+      
   }
+
   
 
 }
@@ -84,31 +122,45 @@ function populate_dropdown(dropdown_json) {
   console.log(dropdown_json)
   console.log(typeof dropdown_json)
   
-  for (var key of Object.keys(dropdown_json)) {
-    
+  for (var key of Object.keys(dropdown_json)) { // for every selected column to get dropdown values for
+
+    selector_div = $(`select[data-field=${key}]`)
     dropdown_json[key].sort()
-    for (var index in dropdown_json[key]){
-      if (key == "flat_type"){
-        $( "#inputFlatType" ).append(`<option>${dropdown_json[key][index]}</option>`);
-      }
-      else if (key == "town"){
-        $( "#inputTown" ).append(`<option>${dropdown_json[key][index]}</option>`);
-      }
-      else if (key == "street_name"){
-        $( "#inputStreetName" ).append(`<option>${dropdown_json[key][index]}</option>`);
-      }
-      else if (key == "flat_model"){
-        $( "#inputFlatModel" ).append(`<option>${dropdown_json[key][index]}</option>`);
-      }
-      else if (key == "month"){
+    for (var index in dropdown_json[key]){ // iterate through every value listed under the column name
+      
+      if (key == "month"){
         $( "#inputEarliestDate" ).append(`<option>${dropdown_json[key][index]}</option>`);
         $( "#inputLatestDate" ).append(`<option>${dropdown_json[key][index]}</option>`);
-        
       }
+      else{
+      
+        selector_div.append(`<option>${dropdown_json[key][index]}</option>`);
+      }
+      
+
+      // if (key == "flat_type"){
+      //   $( "#inputFlatType" ).append(`<option>${dropdown_json[key][index]}</option>`);
+      // }
+      // else if (key == "town"){
+      //   $( "#inputTown" ).append(`<option>${dropdown_json[key][index]}</option>`);
+      // }
+      // else if (key == "street_name"){
+      //   $( "#inputStreetName" ).append(`<option>${dropdown_json[key][index]}</option>`);
+      // }
+      // else if (key == "flat_model"){
+      //   $( "#inputFlatModel" ).append(`<option>${dropdown_json[key][index]}</option>`);
+      // }
+      // else if (key == "month"){
+      //   $( "#inputEarliestDate" ).append(`<option>${dropdown_json[key][index]}</option>`);
+      //   $( "#inputLatestDate" ).append(`<option>${dropdown_json[key][index]}</option>`);
+        
+      // }
     }
       }
 
 }
+
+
 
 
 function populate_main_table(df) {
@@ -174,21 +226,54 @@ function populate_main_table(df) {
 $(document).ready( function () { // runs when the webpage loads
   console.log("document ready")
   dropdown_column_names = ["flat_type", "town", "street_name", "flat_model", "month" ] //specify all columns in dataset to pull all unique values for
-  eel.get_dropdown_values(null, dropdown_column_names)(populate_dropdown)
+  eel.get_dropdown_values(dropdown_column_names, {})(populate_dropdown)
   console.log(1)
   eel.query_db(null)(populate_main_table)
   console.log(2)
   
 } );
 
+$("#inputTown").on("input", function() {
+  //every time a town is chosen, filter the street_name dropdown to only 
+  //show values found with the same town value
+  selected_index = $('#inputTown').prop('selectedIndex'); //check if the first value of a dropdown (the placeholder) is selected
+  if (selected_index != 0){ // if the user actually selected a town and not the placeholder
+    clear_dropdown(`select[data-field="street_name"]`)
+    selected_street_name = $('#inputStreetName').val()
+    autoresolve_street_name(selected_street_name)
+  }
+
+
+});
+
 $(".data-query").on("input", function() {
   //every time an input is detected, run query
   //can consider a delay so that a query isnt run every letter (assuming this is even an issue)
   query_data()
-  
-  //contain_values = df[df['month'].str.contains('ju')]
 
 });
 
+
+
+
+// $("#inputStreetName").on("input", function() {
+//   //every time a town is chosen, filter the street_name dropdown to only 
+//   //show values found with the same town value
+//   console.log("detected1")
+//   selected_index = $('#inputStreetName').prop('selectedIndex'); //check if the first value of a dropdown (the placeholder) is selected
+//   if (selected_index != 0){ // if the user actually selected something and not the placeholder
+//     // dropdown_column_names = ["street_name"] //specify all columns in dataset to pull unique values for
+//     // town_name = $('#inputTown').val()
+//     // street_name_filter_query = {"town": town_name}
+//     // eel.get_dropdown_values(dropdown_column_names, street_name_filter_query)(populate_dropdown)
+//     console.log("detected2")
+//     target_dropdown_id = "#inputTown"
+//     column_name = $(target_dropdown_id).attr("data-field")
+//     user_selected_value = $(target_dropdown_id).val()
+//     query_dict = { column_name : user_selected_value }
+//     auto_select_dropdown(query_dict, target_dropdown_id)
+//   }
+
+// });
 
 // next move most likely is to split the input for the numerical column searches to accept 2 values (to form a range)
