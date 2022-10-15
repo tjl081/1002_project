@@ -15,8 +15,14 @@ import matplotlib.pyplot as plt
 import sys
 import requests #pip install requests
 from geopy.geocoders import Nominatim # pip install geopy
+from MLModel import ML_Model
+import chart_studio
+import plotly.express as px
+import chart_studio.plotly as py
+
 
 db_object = None
+machine_learning = None
 
 
 def pd_to_json(df):
@@ -53,14 +59,81 @@ def get_csv_as_pd():
 
 
 @eel.expose
-def get_dropdown_values(input_df = None, column_names = []):
+def init_ml_model():
+    """Sets the regression model into the global variable"""
+    global machine_learning
+    if not machine_learning:
+        machine_learning = ML_Model()
+
+
+@eel.expose
+def get_predicted_value(input_list):
+    global machine_learning
+    # note: input_list must must be a list of dictionaries, with each dict representing each row
+    df = pd.DataFrame([input_list])
+    result = machine_learning.predict_values(df)
+    print("The predicted value(s) is/are:")
+    print(result)
+    return result[0] # result comes out as list
+
+
+@eel.expose
+def get_prediction_graph(input_row, years_ahead):
+    global machine_learning
+    # note: input_list must must be a list of dictionaries, with each dict representing each row
+    months_to_iterate = int(years_ahead) * 12
+    e = input_row.copy()
+    input_list = [e]
+    date_val = input_row["month"].split("-")
+    year_val = int(date_val[0])
+    month_val = int(date_val[1])
+
+    for i in range(months_to_iterate):
+        
+        if month_val >= 12:
+            year_val += 1
+            month_val = 1
+        else:
+            month_val += 1
+        input_row["month"] = str(year_val) + "-" + str(month_val)
+        temp_dict = input_row.copy()
+        input_list.append(temp_dict)
+
+    date_list = [e["month"] for e in input_list]
+    print(f"Date list: {date_list}")
+    df = pd.DataFrame(input_list)
+    print(df.head(3))
+    print(df.tail(3))
+    result = machine_learning.predict_values(df)
+    print("The predicted value(s) is/are:")
+    print(result)
+    prediction_graph_df = pd.DataFrame(
+        {
+            "date" : date_list,
+            "predicted_price" : result
+        })
+    print(prediction_graph_df.head(2))
+    print(prediction_graph_df.tail(2))
+    print(len(prediction_graph_df.index))
+    
+
+    fig = px.line(prediction_graph_df, x='date', y='predicted_price')
+    url = py.plot(fig, filename = 'prediction_graph', auto_open=False)
+    print(url)
+    return url
+    # test result output
+    # return result[0] # result comes out as list
+
+
+@eel.expose
+def get_dropdown_values(column_names = [], query_dict = {}):
     """retrieves all unique data from specified columns in the .csv file containing dataset"""
     output_dict = {}
     db = get_db()
     if len(column_names) > 0:  # checks if columns were added in the function args 
         initial_time = datetime.now()
         for key in column_names: # for every column name
-            distinct_value_list = db.distinct(key) # get all distinct values of each column name
+            distinct_value_list = db.distinct(key, query_dict) # get all distinct values of each column name
             output_dict[key] = distinct_value_list # insert key name with distinct values in dict
         print(f"Done collating unique values in {(datetime.now() - initial_time).total_seconds()}")
         return output_dict
@@ -287,6 +360,7 @@ if __name__ == "__main__":
     
     eel.init('web', allowed_extensions=['.js', '.html'])
     # mode value depends on preferred browser. should find a way to implement our own browser check
+    chart_studio.tools.set_credentials_file(username='tjl081', api_key='3aQmYk1TJQIdiao8Pqip')
     print("main.py running") 
     # Call a Javascript function. the results are queued then displayed the moment the webpage starts up
     eel.start('main.html', mode="chrome-app") # code seems to pause here while website is running.

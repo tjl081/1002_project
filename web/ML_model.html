@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css"
+    integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.css">
+
+
+    <title>House Price Prediction (Experimental)</title>
+    <!-- <link rel="stylesheet" href="/styles.css"> -->
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="inner_header">
+            <div class="logo_container">
+                <h1>MY SITE</h1>
+            </div>
+            <ul class="navigation">
+                <a>
+                <li>Home</li>
+                </a>
+                <a>
+                <li>Compare Results</li>
+                </a>
+                <a>
+                <li>Favourites</li>
+                </a>
+                <a>
+                <li>Help</li>
+                </a>
+                <a href="ML_model.html" class="link-primary">
+                <li>Resale Price Prediction</li>
+                </a>
+            </ul>
+        </div>
+        
+    </div>
+    
+    <div class="container">
+
+        <h1 class="display-2">Resale flat details</h1>
+
+        <div class="form-row">
+            <div class="form-group col-md-2">
+                <label for="inputYear">Year</label>
+                <input data-field="date_year" type="text" class="data-query form-control" id="inputYear">
+            </div>
+            <div class="form-group col-md-2">
+                <label for="inputMonth">Month</label>
+                <input data-field="date_month" type="text" class="data-query form-control" id="inputMonth">
+            </div>
+            <div class="form-group col-md-4">
+                <label for="inputBlock">Block</label>
+                <input data-field="block" type="text" class="data-query form-control" id="inputBlock">
+            </div>
+            <div class="form-group col-md-4">
+                <label for="inputFlatType">Flat Type</label>
+                <select data-field="flat_type" id="inputFlatType" class="data-query form-control">
+                  <option>-- Any --</option>
+                </select>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="inputTown">Town</label>
+                <select data-field="town" id="inputTown" class="data-query form-control">
+                  <option>-- Any --</option>
+                </select>
+              </div>
+            <div class="form-group col-md-4">
+                <label for="inputStreetName">Street Name</label>
+                <select data-field="street_name" id="inputStreetName" class="data-query form-control">
+                  <option>-- Any --</option>
+                </select>
+            </div>
+            
+            <div class="form-group col-md-2">
+                <label for="inputStoreyRange1">Storey range</label>
+                <input data-field="storey_range_min" type="number" class="data-query form-control" id="inputStoreyRange1" placeholder="Lowest storey number">
+            </div>
+            <div class="form-group col-md-2">
+                <label for="inputStoreyRange2" style="color: white">padding</label>
+                <input data-field="storey_range_max" type="number" class="data-query form-control" id="inputStoreyRange2"  placeholder="Highest storey number">
+            </div>
+            <div class="form-group col-md-4">
+                <label for="inputFloorArea">Floor area (square metre)</label>
+                <input data-field="floor_area_sqm" type="number" class="data-query form-control" id="inputFloorArea">
+            </div>
+            <div class="form-group col-md-4">
+                <label for="inputFlatModel">Flat Model</label>
+                <select data-field="flat_model" id="inputFlatModel" class="data-query form-control">
+                  <option>-- Any --</option>
+                </select>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="inputRemainingLease">Remaining lease (rounded to nearest year)</label>
+                <input data-field="remaining_lease" type="number" class="data-query form-control" id="inputRemainingLease">
+            </div>
+
+        </div>
+    </div>
+    
+    <div class="container">
+        <button type="button" id="init_ml_model" class="btn btn-primary ml_button" disabled>Predict price</button>
+        <div id="prediction_output">The predicted price of the flat is:</div>
+
+        <button type="button" id="get_ml_graph" class="btn btn-primary ml_button" disabled>Generate predicted price graph</button>
+        <div class="embed-responsive embed-responsive-16by9">
+            <iframe frameborder="0" scrolling="no" class="embed-responsive-item" id="prediction_graph" src=""></iframe>
+            <!-- <iframe width="900" height="800" frameborder="0" scrolling="no" src="//plotly.com/~tjl081/1.embed"></iframe> -->
+        </div>
+        
+    </div>
+    
+    <div class="navbar fixed-bottom" style="padding-bottom: 70px;"></div>
+
+    <script type="text/javascript" src="/eel.js"></script>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+        integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+        crossorigin="anonymous"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"
+        integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
+        crossorigin="anonymous"></script>
+        <script type="text/javascript" src="/ml_model_frontend.js"></script>
+
+</body>
+
+</html>
