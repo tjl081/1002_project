@@ -239,11 +239,11 @@ def query_db(search_query_dict, result_limit = 2000):
 
         # search_query_dict = {})
         print(query_list)
-        cursor = data_table.find({"$and" : query_list}, limit=result_limit, projection={'_id': False}).sort("month", -1)
+        cursor = data_table.find({"$and" : query_list}, limit=result_limit).sort("month", -1)
         # exclude _id column, sort by month descending
     else:
         # else, get everything, limit results via result_limit
-        cursor = data_table.find({}, limit=result_limit,  projection={'_id': False}).sort("month", -1)
+        cursor = data_table.find({}, limit=result_limit).sort("month", -1)
     print(f"Query done in {(datetime.now() - initial_time).total_seconds()}")
     initial_time = datetime.now()
     result = json.loads(dumps(cursor))

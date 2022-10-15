@@ -99,7 +99,7 @@ function retrieve_field_values(){
 $(document).ready( function () { // runs when the webpage loads
     
     dropdown_column_names = ["flat_type", "town", "street_name", "flat_model", "month" ] //specify all columns in dataset to pull all unique values for
-    eel.get_dropdown_values(null, dropdown_column_names)(populate_dropdown)
+    eel.get_dropdown_values(dropdown_column_names, {})(populate_dropdown)
     eel.init_ml_model()(enable_predict_button)
 
 

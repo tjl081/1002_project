@@ -85,33 +85,37 @@ async function query_data(){
   if (async_counter == 0) { // if there are no pending async functions still running (i.e. it is the last one)
     for (row_id in df) {
 
-      if (Object.keys(df[row_id]).length == column_count) { // check if the number of values in a row matches the number of columns. just in case.
+      // if (Object.keys(df[row_id]).length == column_count) { // check if the number of values in a row matches the number of columns. just in case.
 
-        table_values = []
-        for (var key of Object.keys(df[row_id])) {
-          //console.log(key + " -> " + df[0][key])
-          //$( "#main-table tbody tr" ).append(`<th>${df[row_id][key]}</th>`);
-          table_values.push(df[row_id][key])
-        }
-        datatable.row.add(table_values);//add a row
+    table_values = []
+    for (var key of Object.keys(df[row_id])) {
+      //console.log(key + " -> " + df[0][key])
+      //$( "#main-table tbody tr" ).append(`<th>${df[row_id][key]}</th>`);
+      if (!(key.startsWith("_"))){
+        table_values.push(df[row_id][key])
       }
-      datatable.draw();
-      console.log("datatable populated")
       
-      // this section of code is for autoresolving the selected town name if the user
-      // selects the street_name directly
-      street_name_selected_index = $('#inputStreetName').prop('selectedIndex');
-      // town_selected_index = $('#inputTown').prop('selectedIndex');
-      if (street_name_selected_index != 0){ // so long as the street_name is selected, autoresolve town value
-        $('#inputTown').val(df[0]["town"]);
-        autoresolve_street_name();
-      }
+    }
+    table_values.push(`<td><button obj_id="${df[row_id]['_id']['$oid']}" onclick= "sendToView();">View</button></td>`)
+    datatable.row.add(table_values);//add a row
+      // }
+    }
+    datatable.draw();
+    console.log("datatable populated")
+    
+    // this section of code is for autoresolving the selected town name if the user
+    // selects the street_name directly
+    street_name_selected_index = $('#inputStreetName').prop('selectedIndex');
+    // town_selected_index = $('#inputTown').prop('selectedIndex');
+    if (street_name_selected_index != 0){ // so long as the street_name is selected, autoresolve town value
+      $('#inputTown').val(df[0]["town"]);
+      autoresolve_street_name();
+    }
       
   }
 
-  
+  }
 
-}
 
 
 function populate_dropdown(dropdown_json) {
@@ -192,20 +196,22 @@ function populate_main_table(df) {
 
   for (row_id in df) {
 
-    if ((Object.keys(df[row_id]).length) == column_count) {
+    // if ((Object.keys(df[row_id]).length) == column_count) {
       // just to check if the number of items in the record matches the number of columns on the table
 
-      table_values_html = ""
-      for (var key of column_header_list) {
-        //console.log(key + " -> " + df[0][key])
-        //$( "#main-table tbody tr" ).append(`<th>${df[row_id][key]}</th>`);
-        table_values_html += `<td>${df[row_id][key]}</td>`
-      }
-
-      table_values_html += `<td><button onclick= "sendToView();">View</button></td>`
-      $("#main-table tbody").append(`<tr>${table_values_html}</tr>`);//add a row
-
+    // table_values_html = `<td style='display:none;'>${df[row_id]['_id']}</td>`
+    table_values_html = ""
+    for (var key of column_header_list) {
+      //console.log(key + " -> " + df[0][key])
+      //$( "#main-table tbody tr" ).append(`<th>${df[row_id][key]}</th>`);
+      table_values_html += `<td>${df[row_id][key]}</td>`
     }
+
+    table_values_html += `<td><button obj_id="${df[row_id]['_id']['$oid']}" onclick= "sendToView();">View</button></td>`
+    console.log(df[row_id]['_id']['$oid'])
+    $("#main-table tbody").append(`<tr>${table_values_html}</tr>`);//add a row
+
+    // }
   }
 
   main_table = $('#main-table').DataTable({
