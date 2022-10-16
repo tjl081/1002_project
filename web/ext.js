@@ -2,9 +2,40 @@
 // for the page
 
 var async_counter = 0
-var export_df=null
+var export_df = null
 console.log("js file linked");
 
+
+function define_table_events(){
+  // event handlers for generated table elements must be defined AFTER the elements are generated
+  $(".set-fav").change(function() {
+    console.log("checkbox detected")
+    row_database_id = $(this).val();
+    if(this.checked) {
+        if (sessionStorage.getItem("fav_list")){
+          fav_id_array = JSON.parse(sessionStorage.getItem("fav_list"));
+          console.log(fav_id_array)
+          fav_id_array.push(row_database_id);
+        }
+        else{
+          fav_id_array = [row_database_id]
+        }
+    }
+    else{
+      fav_id_array = JSON.parse(sessionStorage.getItem("fav_list"));
+      remove_at_index = jQuery.inArray(row_database_id, fav_id_array)
+      if (remove_at_index != -1){ // if a result is found
+        fav_id_array.splice(remove_at_index, 1);
+      }
+
+      
+    }
+
+    sessionStorage.setItem("fav_list", JSON.stringify(fav_id_array));
+    console.log(sessionStorage.getItem("fav_list"))
+  });
+
+}
 
 async function autoresolve_street_name(selected_street_name){
   dropdown_column_names = ["street_name"] //specify all columns in dataset to pull unique values for
@@ -83,11 +114,16 @@ async function query_data(){
   console.log(Object.keys(df).length)
 
   if (async_counter == 0) { // if there are no pending async functions still running (i.e. it is the last one)
+    fav_id_array = JSON.parse(sessionStorage.getItem("fav_list"));
     for (row_id in df) {
 
       // if (Object.keys(df[row_id]).length == column_count) { // check if the number of values in a row matches the number of columns. just in case.
+    checked_html = " "
+    if (fav_id_array.includes(df[row_id]['_id']['$oid'])){
+      checked_html = " checked"
+    }
 
-    table_values = []
+    table_values = [`<td><input class="form-check-input set-fav" type="checkbox" value=${df[row_id]['_id']['$oid']}${checked_html}></td>`]
     for (var key of Object.keys(df[row_id])) {
       //console.log(key + " -> " + df[0][key])
       //$( "#main-table tbody tr" ).append(`<th>${df[row_id][key]}</th>`);
@@ -102,6 +138,7 @@ async function query_data(){
     }
     datatable.draw();
     console.log("datatable populated")
+    define_table_events()
     
     // this section of code is for autoresolving the selected town name if the user
     // selects the street_name directly
@@ -164,9 +201,6 @@ function populate_dropdown(dropdown_json) {
 
 }
 
-
-
-
 function populate_main_table(df) {
   export_df=df
   console.log("populating main table")
@@ -180,7 +214,10 @@ function populate_main_table(df) {
 
   //hide loading animation before table populated
   $(".loader").hide();
+
+
   //generate headers
+  $("#main-table thead tr").append(`<th>Set Favourite</th>`); // column to add set favourite button
   for (var key of Object.keys(df[0])) {
     //console.log(key + " -> " + df[0][key])
     if (!(key.startsWith("_"))) {  // append column header
@@ -194,13 +231,23 @@ function populate_main_table(df) {
   }
   $("#main-table thead tr").append(`<th>View</th>`);
 
-  for (row_id in df) {
+  //populate table with data
+  fav_id_array = JSON.parse(sessionStorage.getItem("fav_list"));
+  checked_html = " "
+  
 
+  for (row_id in df) {
+    if (fav_id_array && fav_id_array.includes(df[row_id]['_id']['$oid'])){
+      checked_html = " checked"
+    }
+    else{
+      checked_html = " "
+    }
     // if ((Object.keys(df[row_id]).length) == column_count) {
       // just to check if the number of items in the record matches the number of columns on the table
 
     // table_values_html = `<td style='display:none;'>${df[row_id]['_id']}</td>`
-    table_values_html = ""
+    table_values_html = `<td><input class="form-check-input set-fav" type="checkbox" value=${df[row_id]['_id']['$oid']}${checked_html}></td>`
     for (var key of column_header_list) {
       //console.log(key + " -> " + df[0][key])
       //$( "#main-table tbody tr" ).append(`<th>${df[row_id][key]}</th>`);
@@ -208,13 +255,19 @@ function populate_main_table(df) {
     }
 
     table_values_html += `<td><button obj_id="${df[row_id]['_id']['$oid']}" onclick= "sendToView();">View</button></td>`
-    console.log(df[row_id]['_id']['$oid'])
     $("#main-table tbody").append(`<tr>${table_values_html}</tr>`);//add a row
 
     // }
   }
 
   main_table = $('#main-table').DataTable({
+    // "createdRow": function( row, data, dataIndex){
+    //     console.log(row)
+    //     console.log(data)
+    //     console.log(dataIndex)
+    //     extracted_id = data[0].split('value=\"').pop();
+        
+    // },
     "pagingType": "input", //sets pagination mode
     order: [[0, 'desc']], // sets first column as descending
     language: {
@@ -230,6 +283,7 @@ function populate_main_table(df) {
   }); //datatable is declared only when the HTML for the table has been finalised
 
   $('#main-table').toggle(); //set table to visible
+  define_table_events()
 
 }
 
@@ -243,16 +297,19 @@ function downloadCSV() {
 }
 
 //EVENT LISTENERS
-
 $(document).ready( function () { // runs when the webpage loads
   console.log("document ready")
   dropdown_column_names = ["flat_type", "town", "street_name", "flat_model", "month" ] //specify all columns in dataset to pull all unique values for
   eel.get_dropdown_values(dropdown_column_names, {})(populate_dropdown)
-  console.log(1)
+  
   eel.query_db(null)(populate_main_table)
+  
   // toggletabs();
   displaygraph();
-  console.log(2)
+  eel.get_main_graphs()()
+
+  //remove the line below to allow persistence through page refreshes
+  // sessionStorage.clear() 
 });
 
 $("#inputTown").on("input", function() {
@@ -272,8 +329,11 @@ $(".data-query").on("input", function() {
   //every time an input is detected, run query
   //can consider a delay so that a query isnt run every letter (assuming this is even an issue)
   query_data()
+  
 
 });
+
+
 
 function sendToView() {
   window.location.href = 'view.html';

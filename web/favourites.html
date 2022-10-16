@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css"
+    integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.css">
+
+
+    <title>Favourite results</title>
+    <!-- <link rel="stylesheet" href="/styles.css"> -->
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="inner_header">
+            <div class="logo_container">
+                <h1>MY SITE</h1>
+            </div>
+            <ul class="navigation">
+                <a href="main.html" class="link-primary">
+                <li>Home</li>
+                </a>
+                <a>
+                <li>Compare Results</li>
+                </a>
+                <a href="favourites.html" class="link-primary">
+                    <li>Favourites</li>
+                 </a>
+                <a href="ML_model.html" class="link-primary">
+                    <li>Resale Price Prediction</li>
+                </a>
+            </ul>
+        </div>
+        
+    </div>
+    
+    <div class="container">
+        <div class="table" style="margin-left: -15%;">
+            <!-- <div class="container"> -->
+            <table id="main-table" class="tab-content" data-toggle="table" data-toolbar="#toolbar" data-height="460" hidden>
+              <thead>
+                <tr>
+                  <!-- <th data-field="id">Item ID</th>
+                          <th data-field="name">Item Name</th>
+                          <th data-field="price">Item Price</th> -->
+                </tr>
+              </thead>
+              <tbody>
+      
+              </tbody>
+            </table>
+            <a id="download-btn" href="/resources/queryData.csv" download onclick="downloadCSV()" hidden>Download CSV of the above table</a>
+            <!-- </div> -->
+          </div>
+    </div>
+    
+    
+    
+    <div class="navbar fixed-bottom" style="padding-bottom: 70px;"></div>
+
+    <script type="text/javascript" src="/eel.js"></script>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+        integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+        crossorigin="anonymous"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"
+        integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
+        crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf8"
+        src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8"
+        src="https://cdn.datatables.net/plug-ins/1.12.1/pagination/input.js"></script>
+    <script type="text/javascript" src="/favourites_frontend.js"></script>
+
+</body>
+
+</html>

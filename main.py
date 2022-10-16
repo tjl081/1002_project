@@ -2,6 +2,7 @@ import eel
 import pandas as pd
 import json
 from bson.json_util import dumps # converts mongodb cursor into python suitable 
+from bson.son import SON
 import glob
 import os
 from pymongo import MongoClient # pip install "pymongo[srv]"
@@ -19,6 +20,8 @@ from MLModel import ML_Model
 import chart_studio
 import plotly.express as px
 import chart_studio.plotly as py
+import plotly.graph_objects as go
+import numpy as np
 
 
 db_object = None
@@ -56,6 +59,193 @@ def get_csv_as_pd():
     csv_files = glob.glob(os.path.join(path, "*.csv"))
     df = pd.concat((pd.read_csv(f) for f in csv_files), ignore_index=True)
     return df
+
+
+def pie_chart_of_column(column_name, quantity_name, graph_title, filter_query = None):
+    """returns a pie chart showing the count (and therefore percentage) of all unique values of an input column name.
+    add second argument to apply $match filter on target column. filter_query should match .find() filter dictionary format"""
+    db = get_db()
+    pipeline = [
+        {"$unwind": '$' + column_name},
+        {"$group": {"_id": '$' + column_name, "count": {"$sum": 1}}},
+        {"$sort": SON([("count", -1), ("_id", -1)])}
+    ] # https://pymongo.readthedocs.io/en/stable/examples/aggregation.html
+
+    if filter_query:
+        pipeline.insert(0, {"$match": filter_query})
+
+    result = pd.DataFrame(list(db.aggregate(pipeline)))
+    print(result)
+    result = result.rename(columns={"_id": column_name, "count": quantity_name})
+    your_labels = result[column_name]
+    your_values = result[quantity_name]
+
+    fig = px.pie(result, values = your_values, names = your_labels, title = graph_title)
+    return fig
+
+# def trend_line_graph(column_name, number_of_years_prior, filter_query):
+#     DATE_COLUMN_NAME = "month"
+#     db = get_db()
+#     column_name = '$' + column_name
+#     earliest_year = datetime.today().year - number_of_years_prior
+#     cursor = db.find({DATE_COLUMN_NAME: {"$gte": str(earliest_year) + "-01"}})
+#     df = pd.DataFrame(list(cursor))
+#     x_axis = pd.to_datetime(df.loc[:,'month'])
+#     y_axis = df.loc[:,'resale_price']
+#     print(len(df.index))
+#     fig = go.Figure()
+#     fig_trend = fig.add_trace(go.Scatter(x=x_axis, y=y_axis))
+#     fig_trend = px.line(df, x=x_axis, y=y_axis, title='Range Slider and Selectors')
+#     return fig_trend
+
+def sum_line_graph_by_columns(groupby_column_name_list, x_name, y_name, graph_title, filter_query):
+    db = get_db()
+    cursor = db.find(filter_query)
+    df = pd.DataFrame(list(cursor))
+    sales_total = df.groupby(groupby_column_name_list).sum().reset_index()
+    linetotal = px.line(sales_total, x = x_name, y = y_name, color = 'flat_type', title=graph_title)
+    return linetotal
+
+
+@eel.expose
+def get_main_graphs():
+    # run all functions to produce graphs here
+    # return a list of iframe URLs
+    earliest_year = datetime.today().year - 5
+    output_dict = {}
+
+    distinct_val_count_column = "flat_model"
+    qty_label = "number_of_flats_sold"
+    graph_title = "Flat models sold since 1990s"
+    fig = pie_chart_of_column(distinct_val_count_column, qty_label, graph_title)
+    fig.update_traces(textposition='inside', textinfo='percent+label')
+    fig.update_layout(title_font_size = 30)
+    url = py.plot(fig, filename = f'{distinct_val_count_column}_distinct_count', auto_open=False)
+    output_dict[graph_title] = url
+
+    # X_YEAR_TREND_COLUMN = "resale_price"
+    # NUMBER_OF_YEARS_PRIOR = 1
+    # fig_trend = trend_line_graph(X_YEAR_TREND_COLUMN, NUMBER_OF_YEARS_PRIOR)
+    # fig_trend.update_layout(title_text=f"Trend of resale prices for the past {number_of_years_prior} years with range slider and selectors")
+    # fig_trend.update_layout(
+    #     xaxis = {
+    #         "rangeselector" : {
+    #             "buttons" : list([
+    #                 {"count" : 1,
+    #                     "label" : "1m",
+    #                     "step" : "month",
+    #                     "stepmode" : "backward"},
+    #                 {"count" : 6,
+    #                     "label" : "6m",
+    #                     "step" : "month",
+    #                     "stepmode" : "backward"},
+    #                 {"count" : 1,
+    #                     "label" : "Year to latest date",
+    #                     "step" : "year",
+    #                     "stepmode" : "todate"},
+    #                 {"count" : 1,
+    #                     "label" : "1y",
+    #                     "step" : "year",
+    #                     "stepmode" : "backward"},
+    #                 {"step" : "all"}
+    #             ])
+    #         },
+    #         "rangeslider" : {
+    #             "visible" : True
+    #         },
+    #         "type" : "date"
+    #     }
+    # )
+    # fig_trend.update_layout(xaxis_title="Year", yaxis_title="Resale Prices")
+    # fig_trend.write_html("test.html")
+    # url = py.plot(fig_trend, filename = 'resale_price_trend', auto_open=False)
+    
+
+    distinct_val_count_column = "flat_type"
+    qty_label = "number_of_flat_type_sold"
+    target_town = "ANG MO KIO"
+    graph_title = f"Flat type sold in {target_town} since 2017"
+    filter_query = { "$and" : [ { "month" : {"$gte": str(earliest_year) + "-01"}}, { "town" : {"$eq": target_town}} ] }
+    fig = pie_chart_of_column(distinct_val_count_column, qty_label, graph_title, filter_query)
+    fig.update_layout(
+        updatemenus = [
+            {
+                "buttons" : [
+                    {
+                        "args" : ["type", "pie"],
+                        "label" : "Pie Chart",
+                        "method" : "restyle"
+                    },
+                    {
+                        "args" : ["type", "bar"],
+                        "label" : "Bar Graph",
+                        "method" : "restyle"
+                    }
+
+                ],
+                "direction" : "down",
+                "pad" : {"r": 10, "t": 10},
+                "showactive" : True,
+                "x" : 0,
+                "xanchor" : "left",
+                "y" : 1.135,
+                "yanchor" : "top"
+            },
+        ],
+        title_font_size = 25
+    )
+    fig.update_traces(textposition = 'inside', textinfo = 'percent+label')
+    url = py.plot(fig, filename = f'{distinct_val_count_column}_distinct_count', auto_open=False)
+    output_dict[graph_title] = url
+
+
+    groupby_column_name_list = ['month','flat_type']
+    x_name = "month"
+    y_name = "resale_price" 
+    target_town = "ANG MO KIO"
+    graph_title = f'Total sales of HDB flats transacted in {target_town}'
+    filter_query = { "$and" : [ { "month" : {"$gte": str(earliest_year) + "-01"}}, { "town" : {"$eq": target_town}} ] }
+    fig = sum_line_graph_by_columns(groupby_column_name_list, x_name, y_name, graph_title, filter_query)
+    fig.update_layout(
+        xaxis_title="Year",
+        yaxis_title="Sales (in SGD)",
+        xaxis = {
+            "rangeselector" : {
+                "buttons" : [
+                    {"count" : 1,
+                         "label" : "1m",
+                         "step" : "month",
+                         "stepmode" : "backward"},
+                    {"count" : 6,
+                         "label" : "6m",
+                         "step" : "month",
+                         "stepmode" : "backward"},
+                    {"count" : 1,
+                         "label" : "Current year to latest date",
+                         "step" : "year",
+                         "stepmode" : "todate"},
+                    {"count" : 1,
+                         "label" : "1y",
+                         "step" : "year",
+                         "stepmode" : "backward"},
+                    {"count" : 3,
+                         "label" : "Past 3 years",
+                         "step" : "year",
+                         "stepmode" : "backward"},
+                    {"step" : "all"}
+                ]
+            },
+            "rangeslider" : {
+                "visible" : True
+            },
+            "type" : "date"
+        }
+        )
+    url = py.plot(fig, filename = f'sum_line_graph_groupby_[{", ".join(groupby_column_name_list)}]', auto_open=False)
+    output_dict[graph_title] = url
+
+    print(output_dict)
+    return None
 
 
 @eel.expose
@@ -198,11 +388,14 @@ def heatmap_plot():
     #plt.show()
     # return savedfig
     
+# @eel.expose
+# def query_db_by_id(id_list, result_limit = 2000):
 
 
 @eel.expose
 def query_db(search_query_dict, result_limit = 2000):
     DATE_COLUMN_NAME = "month"
+    ID_COLUMN_NAME = "_id"
     data_table = get_db()
     
     # If we are getting everything, query dict should be an empty dict {}
@@ -228,7 +421,12 @@ def query_db(search_query_dict, result_limit = 2000):
                     query_list.append({DATE_COLUMN_NAME: {"$gte": search_value}})
                 if key == "month_latest":
                     query_list.append({DATE_COLUMN_NAME: {"$lte": search_value}})
-                
+            
+            elif search_value and "_id" in key:
+                # for standardisation, search_value is expected to be a list
+                search_value = [ObjectId(x) for x in search_value]
+                query_list.append({"_id": {"$in": search_value}})
+
             elif search_value:
                 if value["search_type"] == "match_text":
                     # must match value. Acceptable to use here, since dropdowns take values from the data itself
