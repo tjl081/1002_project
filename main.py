@@ -83,20 +83,33 @@ def pie_chart_of_column(column_name, quantity_name, graph_title, filter_query = 
     fig = px.pie(result, values = your_values, names = your_labels, title = graph_title)
     return fig
 
-# def trend_line_graph(column_name, number_of_years_prior, filter_query):
-#     DATE_COLUMN_NAME = "month"
+
+#     not feasible: data size too large to upload to chart studio unless i pay
+# def trend_line_graph(date_column_name, y_column_name, earliest_year, filter_query):
 #     db = get_db()
-#     column_name = '$' + column_name
-#     earliest_year = datetime.today().year - number_of_years_prior
-#     cursor = db.find({DATE_COLUMN_NAME: {"$gte": str(earliest_year) + "-01"}})
+#     cursor = db.find(filter_query)
 #     df = pd.DataFrame(list(cursor))
-#     x_axis = pd.to_datetime(df.loc[:,'month'])
-#     y_axis = df.loc[:,'resale_price']
-#     print(len(df.index))
+#     # new_df = df[]
+#     df = df[[date_column_name, y_column_name]]
+#     x_axis = pd.to_datetime(df[date_column_name])
+#     y_axis = df[y_column_name]
+#     print(df)
 #     fig = go.Figure()
-#     fig_trend = fig.add_trace(go.Scatter(x=x_axis, y=y_axis))
-#     fig_trend = px.line(df, x=x_axis, y=y_axis, title='Range Slider and Selectors')
-#     return fig_trend
+#     fig = fig.add_trace(go.Scatter(x=x_axis, y=y_axis))
+#     fig = px.line(df, x=x_axis, y=y_axis, title=f"Trend of {y_column_name} since {earliest_year} with range slider and selectors")
+#     return fig
+
+
+def historic_line_graph(x_column_name, y_columnm_name, filter_column, graph_title, filter_query):
+    """'x_column_name' and 'y_column_name' define the names of the columns which will have their values 
+    assigned to the x and y axis of the line graph respectively"""
+    db = get_db()
+    cursor = db.find(filter_query)
+    df = pd.DataFrame(list(cursor))
+    df = df[[x_column_name, y_columnm_name, filter_column]]
+    fig = px.line(df, x = x_column_name, y = y_columnm_name, color = filter_column, title=graph_title)
+    return fig
+
 
 def sum_line_graph_by_columns(groupby_column_name_list, x_name, y_name, graph_title, filter_query):
     db = get_db()
@@ -105,6 +118,21 @@ def sum_line_graph_by_columns(groupby_column_name_list, x_name, y_name, graph_ti
     sales_total = df.groupby(groupby_column_name_list).sum().reset_index()
     linetotal = px.line(sales_total, x = x_name, y = y_name, color = 'flat_type', title=graph_title)
     return linetotal
+
+
+def aggregated_bar_graph(qty_name, pipeline_list, graph_title):
+
+    db = get_db()
+    if not any("$sort" in d for d in pipeline_list):
+        pipeline_list.append({"$sort": SON([("count", -1), ("_id", -1)])})
+    
+    result = pd.DataFrame(list(db.aggregate(pipeline_list)))
+    your_labels = result["_id"]
+    your_values = result[qty_name]
+
+    # fig = px.bar(result, values = your_values, names = your_labels, title = graph_title)
+    fig = px.bar(result, x = your_labels, y = your_values, title = graph_title, orientation = 'v', height = 400)
+    return fig
 
 
 @eel.expose
@@ -123,14 +151,15 @@ def get_main_graphs():
     url = py.plot(fig, filename = f'{distinct_val_count_column}_distinct_count', auto_open=False)
     output_dict[graph_title] = url
 
-    # X_YEAR_TREND_COLUMN = "resale_price"
-    # NUMBER_OF_YEARS_PRIOR = 1
-    # fig_trend = trend_line_graph(X_YEAR_TREND_COLUMN, NUMBER_OF_YEARS_PRIOR)
-    # fig_trend.update_layout(title_text=f"Trend of resale prices for the past {number_of_years_prior} years with range slider and selectors")
-    # fig_trend.update_layout(
-    #     xaxis = {
+    # date_column_name = "month"
+    # y_column_name = "resale_price"
+    # filter_query = { "$and" : [ { "month" : {"$gte": "2021" + "-01"}} ] }
+    # fig = trend_line_graph(date_column_name, y_column_name, 2021, filter_query)
+    # fig.update_layout(title_text="Trend of resale prices for the past 5 years with range slider and selectors")
+    # fig.update_layout(
+    #     xaxis={
     #         "rangeselector" : {
-    #             "buttons" : list([
+    #             "buttons" : [
     #                 {"count" : 1,
     #                     "label" : "1m",
     #                     "step" : "month",
@@ -148,7 +177,7 @@ def get_main_graphs():
     #                     "step" : "year",
     #                     "stepmode" : "backward"},
     #                 {"step" : "all"}
-    #             ])
+    #             ]
     #         },
     #         "rangeslider" : {
     #             "visible" : True
@@ -156,9 +185,11 @@ def get_main_graphs():
     #         "type" : "date"
     #     }
     # )
-    # fig_trend.update_layout(xaxis_title="Year", yaxis_title="Resale Prices")
-    # fig_trend.write_html("test.html")
-    # url = py.plot(fig_trend, filename = 'resale_price_trend', auto_open=False)
+    # fig.update_layout(
+    #     xaxis_title="Year", yaxis_title="Resale Prices"
+    # )
+    # url = py.plot(fig, filename = f'{y_column_name}_trend', auto_open=False)
+    # output_dict[graph_title] = url
     
 
     distinct_val_count_column = "flat_type"
@@ -196,6 +227,55 @@ def get_main_graphs():
     )
     fig.update_traces(textposition = 'inside', textinfo = 'percent+label')
     url = py.plot(fig, filename = f'{distinct_val_count_column}_distinct_count', auto_open=False)
+    output_dict[graph_title] = url
+
+    x_column_name = "month"
+    y_columnm_name = "resale_price"
+    filter_column = "flat_type"
+    filter_value = "4 ROOM"
+    target_town = "ANG MO KIO"
+    filter_query = { "$and" : [ 
+        { "month" : {"$gte": str(earliest_year) + "-01"}}, 
+        { "town" : {"$eq": target_town}},
+        { filter_column : {"$eq": filter_value}}
+        ] }
+    graph_title = f"Resale prices of {filter_value} flats"
+    fig = historic_line_graph(x_column_name, y_columnm_name, filter_column, graph_title, filter_query)
+    fig.update_layout(xaxis_title = "Year", yaxis_title = "Resale Prices")
+    fig.update_layout(
+        xaxis={
+            "rangeselector" : {
+                "buttons" : [
+                    {"count" : 1,
+                         "label" : "1m",
+                         "step" : "month",
+                         "stepmode" : "backward"},
+                    {"count" : 6,
+                         "label" : "6m",
+                         "step" : "month",
+                         "stepmode" : "backward"},
+                    {"count" : 1,
+                         "label" : "Current year to latest date",
+                         "step" : "year",
+                         "stepmode" : "todate"},
+                    {"count" : 1,
+                         "label" : "1y",
+                         "step" : "year",
+                         "stepmode" : "backward"},
+                    {"count" : 3,
+                         "label" : "Past 3 years",
+                         "step" : "year",
+                         "stepmode" : "backward"},
+                    {"step" : "all"}
+                ]
+            },
+            "rangeslider" : {
+                "visible" : True
+            },
+            "type" : "date"
+        }
+    )
+    url = py.plot(fig, filename = f'historic_line_graph_by_{filter_column}:{filter_value}', auto_open=False)
     output_dict[graph_title] = url
 
 
@@ -242,6 +322,163 @@ def get_main_graphs():
         }
         )
     url = py.plot(fig, filename = f'sum_line_graph_groupby_[{", ".join(groupby_column_name_list)}]', auto_open=False)
+    output_dict[graph_title] = url
+
+    
+    category_name = "flat_type"
+    pipeline_result = "avg"
+    target_town = "ANG MO KIO"
+    target_year = 2017
+    y_column = "resale_price"
+    pipeline_list = [
+        {"$match": {"town": target_town, "month": {"$regex" : str(target_year)}}},
+        {"$group" : {"_id": "$" + category_name, y_column: {"$" + pipeline_result: "$" + y_column}} }
+    ]
+    graph_title = f"Average Resale price of the {category_name} in {target_town} on {target_year}"
+    fig = aggregated_bar_graph(y_column, pipeline_list, graph_title)
+    fig.update_layout(xaxis_title = "Flat Types", yaxis_title = "Average Resale Prices"
+    )
+    # Add dropdown
+    fig.update_layout(
+        updatemenus=[
+            {
+                "type" : "buttons",
+                "direction" : "right",
+                "buttons" : [
+                    {
+                        "args" : ["type", "bar"],
+                        "label" : "Bar",
+                        "method" : "restyle"
+                    },
+                      {
+                        "args" : ["type", "line"],
+                        "label" : "Line",
+                        "method" : "restyle"
+                      },
+
+                ],
+                "pad" : {"r": 10, "t": 10},
+                "showactive" : True,
+                "x" : 0,
+                "xanchor" : "left",
+                "y" : 1.9,
+                "yanchor" : "top"
+            },
+        ]
+    )
+    # Add annotation
+    fig.update_layout(
+        annotations = [{"text" : 'Ascending order' ,"showarrow" : False,"x" : 0, "y" : 1.1, "yref" : "paper", "align" : "left"}]
+    )
+    url = py.plot(fig, filename = f'avg_resale_price_by_{category_name}_in_{target_town}_on_{target_year}', auto_open=False)
+    output_dict[graph_title] = url
+
+
+    category_name = "flat_type"
+    pipeline_result = "sum"
+    target_town = "ANG MO KIO"
+    target_year = 2017
+    pipeline_list = [
+        {"$match": {"town": target_town, "month": {"$regex" : str(target_year)}}},
+        {"$group" : {"_id": "$" + category_name, pipeline_result: {"$" + pipeline_result: 1}} }
+    ]
+    graph_title = f"Number of {category_name} sold in {target_town} on {target_year}"
+    fig = aggregated_bar_graph(pipeline_result, pipeline_list, graph_title)
+    fig.update_layout(xaxis_title="Flat Types", yaxis_title="Number of flat types sold")
+    fig.update_layout(
+        updatemenus=[
+            {
+                "type" : "buttons",
+                "direction" : "right",
+                "buttons" : [
+                    {
+                        "args" : ["type", "bar"],
+                        "label" : "Bar",
+                        "method" : "restyle"
+                    },
+                      {
+                        "args" : ["type", "line"],
+                        "label" : "Line",
+                        "method" : "restyle"
+                      },
+
+                ],
+                "pad" : {"r": 10, "t": 10},
+                "showactive" : True,
+                "x" : 0,
+                "xanchor" : "left",
+                "y" : 1.9,
+                "yanchor" : "top"
+            },
+        ]
+    )
+
+    # Add annotation
+    fig.update_layout(
+        annotations=[{
+            "text" : '' ,
+            "showarrow" : False,
+            "x" : 0, 
+            "y" : 1.1, 
+            "yref" : "paper", 
+            "align" : "left"}
+        ]
+    )
+
+    url = py.plot(fig, filename = f'total_number_sold_by_{category_name}_in_{target_town}_on_{target_year}', auto_open=False)
+    output_dict[graph_title] = url
+
+    category_name = "flat_type"
+    pipeline_result = "sum"
+    target_town = "ANG MO KIO"
+    target_year = 2017
+    y_column = "resale_price"
+    pipeline_list = [
+        {"$match": {"town": target_town, "month": {"$regex" : str(target_year)}}},
+        {"$group" : {"_id": "$" + category_name, pipeline_result: {"$" + pipeline_result: "$" + y_column}} }
+    ]
+    graph_title = f"Total sales of {category_name} sold in {target_town} on {target_year}"
+    fig = aggregated_bar_graph(pipeline_result, pipeline_list, graph_title)
+    # Add dropdown
+    fig.update_layout(
+        updatemenus=[
+            {
+                "type" : "buttons",
+                "direction" : "right",
+                "buttons" : [
+                    {
+                        "args" : ["type", "bar"],
+                        "label" : "Bar",
+                        "method" : "restyle"
+                    },
+                      {
+                        "args" : ["type", "line"],
+                        "label" : "Line",
+                        "method" : "restyle"
+                      },
+
+                ],
+                "pad" : {"r": 10, "t": 10},
+                "showactive" : True,
+                "x" : 0,
+                "xanchor" : "left",
+                "y" : 1.9,
+                "yanchor" : "top"
+            },
+        ]
+    )
+    # Add annotation
+    fig.update_layout(
+        annotations=[{
+            "text" : '', 
+            "showarrow" : False, 
+            "x" : 0, 
+            "y" : 1.1, 
+            "yref" : "paper", 
+            "align" : "left"}
+        ]
+    )
+    url = py.plot(fig, filename = f'total_resale_price_by_{category_name}_in_{target_town}_on_{target_year}', auto_open=False)
     output_dict[graph_title] = url
 
     print(output_dict)
