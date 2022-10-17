@@ -5,6 +5,21 @@ var async_counter = 0
 var export_df = null
 console.log("js file linked");
 
+function toggletabs(evt, tabName) {
+  var i, tabcontent, tablinks;
+  tabcontent = document.getElementsByClassName("tab-content");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+  document.getElementById(tabName).style.display = "block";
+  // document.getElementById("main-table_wrapper").style.display = "none";
+  evt.currentTarget.className += " active";
+}
+
 
 function define_table_events(){
   // event handlers for generated table elements must be defined AFTER the elements are generated
@@ -58,14 +73,11 @@ async function autoresolve_street_name(selected_street_name){
 }
 
 function clear_dropdown(element_identifier){
-
   selector_div = $(element_identifier);
   selector_div.children('option').not('.placeholder').remove(); // clear all existing <option> elements in a dropdown
-
 }
 
-async function query_data(){
-  //placeholder_str = "-- Any --"
+function retrieve_input_values(){
   console.log("Input detected")
   input_dict = {}
   is_filter = false // flag to indicate if any filtering is performed. if not, se input_dict to null TO PREVENT ERROR
@@ -94,6 +106,12 @@ async function query_data(){
   if (!is_filter) { // if no filtering is done (e.g load all results when webpage opens)
     input_dict = null
   }
+  return input_dict
+}
+
+async function query_data(){
+  //placeholder_str = "-- Any --"
+  input_dict = retrieve_input_values()
 
   console.log(input_dict)
   console.log(typeof input_dict)
@@ -287,7 +305,7 @@ function populate_main_table(df) {
 
 }
 
-function displaygraph() { //prediction graph
+function displaygraph() {
   eel.heatmap_plot();
   $('#graph').append(`<img src= "/resources/heatmap.jpg">`);
 }
@@ -299,6 +317,7 @@ function downloadCSV() {
 //EVENT LISTENERS
 $(document).ready( function () { // runs when the webpage loads
   console.log("document ready")
+  $("#graph").css("display", "none")
   dropdown_column_names = ["flat_type", "town", "street_name", "flat_model", "month" ] //specify all columns in dataset to pull all unique values for
   eel.get_dropdown_values(dropdown_column_names, {})(populate_dropdown)
   
@@ -306,7 +325,7 @@ $(document).ready( function () { // runs when the webpage loads
   
   // toggletabs();
   displaygraph();
-  eel.get_main_graphs()()
+  // eel.get_main_graphs()()
 
   //remove the line below to allow persistence through page refreshes
   // sessionStorage.clear() 

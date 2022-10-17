@@ -117,13 +117,13 @@
       <li class="tablinks"><a data-toggle="tab" href="#graph">Graph</a></li>
     </ul> -->
     <div class="tab">
-      <button class="tablinks" onclick="toggletabs(event, 'main-table')" id="defaultOpen">Table</button>
+      <button class="tablinks" onclick="toggletabs(event, 'table_div')" id="defaultOpen">Table</button>
       <button class="tablinks" onclick="toggletabs(event, 'graph')">Graph</button>
     </div>
     <div class="loader"></div>
-    <div class="table">
+    <div class="table tab-content" id="table_div">
       <!-- <div class="container"> -->
-      <table id="main-table" class="tab-content" data-toggle="table" data-toolbar="#toolbar" data-height="460" hidden>
+      <table id="main-table" data-toggle="table" data-toolbar="#toolbar" data-height="460" hidden>
         <thead>
           <tr>
             <!-- <th data-field="id">Item ID</th>
@@ -142,6 +142,13 @@
     <!-- <div class="container"> -->
     <div id="graph" class="tab-content">
       <!-- <img src="/resources/heatmap.jpg" alt="graph"> -->
+      <div class="form-group col-md-4">
+        <label for="setDisplayedGraphs">Graph category</label>
+        <select id="setDisplayedGraphs" class="data-query form-control">
+          <option value="pie_chart">Pie chart</option>
+          <option value="bar_graph">Bar graph</option>
+          <option value="trends">Trends</option>
+        </select>
     </div>
     <!-- </div> -->
     <!-- </div> -->
@@ -169,7 +176,7 @@
 </html>
 
 
-<script>
+<!-- <script>
   //document.getElementById("defaultOpen").click();
   document.getElementById("graph").style.display = "none";
   //function to toggle between table & graph
@@ -187,4 +194,4 @@
     // document.getElementById("main-table_wrapper").style.display = "none";
     evt.currentTarget.className += " active";
   }
-</script>
+</script> -->

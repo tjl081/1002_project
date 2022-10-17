@@ -136,6 +136,35 @@ def aggregated_bar_graph(qty_name, pipeline_list, graph_title):
 
 
 @eel.expose
+def query_graphs(input_dict):
+    
+    output_dict = {}
+    earliest_year = input_dict["month_earliest"].split("_")[0]
+    latest_year = input_dict["month_latest"].split("_")[0]
+    if input_dict["graph_category"] == "pie_chart":
+
+        distinct_val_count_column = "flat_model"
+        qty_label = "number_of_flats_sold"
+        graph_title = "Flat models sold since 1990s"
+        fig = pie_chart_of_column(distinct_val_count_column, qty_label, graph_title)
+        fig.update_traces(textposition='inside', textinfo='percent+label')
+        fig.update_layout(title_font_size = 30)
+        url = py.plot(fig, filename = f'{distinct_val_count_column}_distinct_count', auto_open=False)
+        output_dict[graph_title] = url
+        
+        pass
+    elif input_dict["graph_category"] == "bar_graph":
+        pass
+    elif input_dict["graph_category"] == "trends":
+        pass
+    else:
+        print("Invalid graph category, exiting")
+        return None
+
+    pass
+
+
+@eel.expose
 def get_main_graphs():
     # run all functions to produce graphs here
     # return a list of iframe URLs
@@ -366,10 +395,10 @@ def get_main_graphs():
             },
         ]
     )
-    # Add annotation
-    fig.update_layout(
-        annotations = [{"text" : 'Ascending order' ,"showarrow" : False,"x" : 0, "y" : 1.1, "yref" : "paper", "align" : "left"}]
-    )
+    # # Add annotation
+    # fig.update_layout(
+    #     annotations = [{"text" : 'Ascending order' ,"showarrow" : False,"x" : 0, "y" : 1.1, "yref" : "paper", "align" : "left"}]
+    # )
     url = py.plot(fig, filename = f'avg_resale_price_by_{category_name}_in_{target_town}_on_{target_year}', auto_open=False)
     output_dict[graph_title] = url
 
@@ -584,46 +613,46 @@ def get_dropdown_values(column_names = [], query_dict = {}):
     #     print("No columns specified in function. Aborting....")
     #     return None
     
-@eel.expose
-def heatmap_plot():
-    #this function is to plot the heatmap to predict the future price of flats based on type of flat and town area
-    #below is just hardcoded example 
-    vegetables = ["cucumber", "tomato", "lettuce", "asparagus",
-              "potato", "wheat", "barley"]
-    farmers = ["Farmer Joe", "Upland Bros.", "Smith Gardening",
-           "Agrifun", "Organiculture", "BioGoods Ltd.", "Cornylee Corp."]
+# @eel.expose
+# def heatmap_plot():
+#     #this function is to plot the heatmap to predict the future price of flats based on type of flat and town area
+#     #below is just hardcoded example 
+#     vegetables = ["cucumber", "tomato", "lettuce", "asparagus",
+#               "potato", "wheat", "barley"]
+#     farmers = ["Farmer Joe", "Upland Bros.", "Smith Gardening",
+#            "Agrifun", "Organiculture", "BioGoods Ltd.", "Cornylee Corp."]
 
-    harvest = np.array([[0.8, 2.4, 2.5, 3.9, 0.0, 4.0, 0.0],
-                    [2.4, 0.0, 4.0, 1.0, 2.7, 0.0, 0.0],
-                    [1.1, 2.4, 0.8, 4.3, 1.9, 4.4, 0.0],
-                    [0.6, 0.0, 0.3, 0.0, 3.1, 0.0, 0.0],
-                    [0.7, 1.7, 0.6, 2.6, 2.2, 6.2, 0.0],
-                    [1.3, 1.2, 0.0, 0.0, 0.0, 3.2, 5.1],
-                    [0.1, 2.0, 0.0, 1.4, 0.0, 1.9, 6.3]])
+#     harvest = np.array([[0.8, 2.4, 2.5, 3.9, 0.0, 4.0, 0.0],
+#                     [2.4, 0.0, 4.0, 1.0, 2.7, 0.0, 0.0],
+#                     [1.1, 2.4, 0.8, 4.3, 1.9, 4.4, 0.0],
+#                     [0.6, 0.0, 0.3, 0.0, 3.1, 0.0, 0.0],
+#                     [0.7, 1.7, 0.6, 2.6, 2.2, 6.2, 0.0],
+#                     [1.3, 1.2, 0.0, 0.0, 0.0, 3.2, 5.1],
+#                     [0.1, 2.0, 0.0, 1.4, 0.0, 1.9, 6.3]])
 
 
-    fig, ax = plt.subplots()
-    im = ax.imshow(harvest)
+#     fig, ax = plt.subplots()
+#     im = ax.imshow(harvest)
 
-    # Show all ticks and label them with the respective list entries
-    ax.set_xticks(np.arange(len(farmers)), labels=farmers)
-    ax.set_yticks(np.arange(len(vegetables)), labels=vegetables)
+#     # Show all ticks and label them with the respective list entries
+#     ax.set_xticks(np.arange(len(farmers)), labels=farmers)
+#     ax.set_yticks(np.arange(len(vegetables)), labels=vegetables)
 
-    # Rotate the tick labels and set their alignment.
-    plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
-         rotation_mode="anchor")
+#     # Rotate the tick labels and set their alignment.
+#     plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+#          rotation_mode="anchor")
 
-    # Loop over data dimensions and create text annotations.
-    for i in range(len(vegetables)):
-        for j in range(len(farmers)):
-            text = ax.text(j, i, harvest[i, j],
-                       ha="center", va="center", color="w")
+#     # Loop over data dimensions and create text annotations.
+#     for i in range(len(vegetables)):
+#         for j in range(len(farmers)):
+#             text = ax.text(j, i, harvest[i, j],
+#                        ha="center", va="center", color="w")
 
-    ax.set_title("Harvest of local farmers (in tons/year)")
-    fig.tight_layout()
-    fig.savefig('web/resources/heatmap3.jpg')
-    #plt.show()
-    # return savedfig
+#     ax.set_title("Harvest of local farmers (in tons/year)")
+#     fig.tight_layout()
+#     fig.savefig('web/resources/heatmap3.jpg')
+#     #plt.show()
+#     # return savedfig
     
 # @eel.expose
 # def query_db_by_id(id_list, result_limit = 2000):
