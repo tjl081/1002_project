@@ -6,6 +6,38 @@ var export_df = null
 console.log("js file linked");
 
 
+
+function define_table_events() {
+  // event handlers for generated table elements must be defined AFTER the elements are generated
+  $(".set-fav").change(function () {
+    console.log("checkbox detected")
+    row_database_id = $(this).val();
+    if (this.checked) {
+      if (sessionStorage.getItem("fav_list")) {
+        fav_id_array = JSON.parse(sessionStorage.getItem("fav_list"));
+        console.log(fav_id_array)
+        fav_id_array.push(row_database_id);
+      }
+      else {
+        fav_id_array = [row_database_id]
+      }
+    }
+    else {
+      fav_id_array = JSON.parse(sessionStorage.getItem("fav_list"));
+      remove_at_index = jQuery.inArray(row_database_id, fav_id_array)
+      if (remove_at_index != -1) { // if a result is found
+        fav_id_array.splice(remove_at_index, 1);
+      }
+
+
+    }
+
+    sessionStorage.setItem("fav_list", JSON.stringify(fav_id_array));
+    console.log(sessionStorage.getItem("fav_list"))
+  });
+
+}
+
 async function autoresolve_street_name(selected_street_name) {
   dropdown_column_names = ["street_name"] //specify all columns in dataset to pull unique values for
   town_name = $('#inputTown').val()
@@ -26,14 +58,12 @@ async function autoresolve_street_name(selected_street_name) {
 }
 
 function clear_dropdown(element_identifier) {
-
   selector_div = $(element_identifier);
   selector_div.children('option').not('.placeholder').remove(); // clear all existing <option> elements in a dropdown
 
 }
 
-async function query_data() {
-  //placeholder_str = "-- Any --"
+function retrieve_input_values() {
   console.log("Input detected")
   input_dict = {}
   is_filter = false // flag to indicate if any filtering is performed. if not, se input_dict to null TO PREVENT ERROR
@@ -62,6 +92,12 @@ async function query_data() {
   if (!is_filter) { // if no filtering is done (e.g load all results when webpage opens)
     input_dict = null
   }
+  return input_dict
+}
+
+async function query_data() {
+  //placeholder_str = "-- Any --"
+  input_dict = retrieve_input_values()
 
   console.log(input_dict)
   console.log(typeof input_dict)
@@ -85,8 +121,12 @@ async function query_data() {
     for (row_id in df) {
 
       // if (Object.keys(df[row_id]).length == column_count) { // check if the number of values in a row matches the number of columns. just in case.
+      checked_html = " "
+      if (fav_id_array.includes(df[row_id]['_id']['$oid'])) {
+        checked_html = " checked"
+      }
 
-      table_values = []
+      table_values = [`<td><input class="form-check-input set-fav" type="checkbox" value=${df[row_id]['_id']['$oid']}${checked_html}></td>`]
       for (var key of Object.keys(df[row_id])) {
         //console.log(key + " -> " + df[0][key])
         //$( "#main-table tbody tr" ).append(`<th>${df[row_id][key]}</th>`);
@@ -101,6 +141,7 @@ async function query_data() {
     }
     datatable.draw();
     console.log("datatable populated")
+    define_table_events()
 
     // this section of code is for autoresolving the selected town name if the user
     // selects the street_name directly
@@ -193,8 +234,18 @@ function populate_main_table(df) {
   }
   $("#main-table thead tr").append(`<th>View</th>`);
 
-  for (row_id in df) {
+  //populate table with data
+  fav_id_array = JSON.parse(sessionStorage.getItem("fav_list"));
+  checked_html = " "
 
+
+  for (row_id in df) {
+    if (fav_id_array && fav_id_array.includes(df[row_id]['_id']['$oid'])) {
+      checked_html = " checked"
+    }
+    else {
+      checked_html = " "
+    }
     // if ((Object.keys(df[row_id]).length) == column_count) {
     // just to check if the number of items in the record matches the number of columns on the table
 
@@ -206,13 +257,19 @@ function populate_main_table(df) {
     }
 
     table_values_html += `<td><button obj_id="${df[row_id]['_id']['$oid']}" onclick= "sendToView();">View</button></td>`
-    console.log(df[row_id]['_id']['$oid'])
     $("#main-table tbody").append(`<tr>${table_values_html}</tr>`);//add a row
 
     // }
   }
 
   main_table = $('#main-table').DataTable({
+    // "createdRow": function( row, data, dataIndex){
+    //     console.log(row)
+    //     console.log(data)
+    //     console.log(dataIndex)
+    //     extracted_id = data[0].split('value=\"').pop();
+
+    // },
     "pagingType": "input", //sets pagination mode
     order: [[0, 'desc']], // sets first column as descending
     language: {
@@ -231,7 +288,7 @@ function populate_main_table(df) {
 
 }
 
-function displaygraph() { //prediction graph
+function displaygraph() {
   eel.heatmap_plot();
   $('#graph').append(`<img src= "/resources/heatmap.jpg">`);
 }
@@ -241,16 +298,20 @@ function downloadCSV() {
 }
 
 //EVENT LISTENERS
-
 $(document).ready(function () { // runs when the webpage loads
   console.log("document ready")
+  $("#graph").css("display", "none")
   dropdown_column_names = ["flat_type", "town", "street_name", "flat_model", "month"] //specify all columns in dataset to pull all unique values for
   eel.get_dropdown_values(dropdown_column_names, {})(populate_dropdown)
-  console.log(1)
+
   eel.query_db(null)(populate_main_table)
+
   // toggletabs();
   displaygraph();
-  console.log(2)
+  // eel.get_main_graphs()()
+
+  //remove the line below to allow persistence through page refreshes
+  // sessionStorage.clear() 
 });
 
 $("#inputTown").on("input", function () {
@@ -271,26 +332,13 @@ $(".data-query").on("input", function () {
   //can consider a delay so that a query isnt run every letter (assuming this is even an issue)
   query_data()
 
+
 });
 
-async function sendToView() {
-  month = document.getElementById('month').innerHTML;
-  console.log(month);
-  town = document.getElementById('town').innerHTML;
-  flat_type = document.getElementById('flat_type').innerHTML;
-  block = document.getElementById('block').innerHTML;
-  street_name = document.getElementById('street_name').innerHTML;
-  storey_range = document.getElementById('storey_range').innerHTML;
-  floor_area_sqm = parseFloat(document.getElementById('floor_area_sqm').innerHTML);
-  flat_model = document.getElementById('flat_model').innerHTML;
-  lease_commence_date = parseInt(document.getElementById('lease_commence_date').innerHTML);
-  resale_price = parseFloat(document.getElementById('resale_price').innerHTML);
-  remaining_lease = document.getElementById('remaining_lease').innerHTML;
-  console.log(typeof (month), typeof (town), typeof (flat_type), typeof (block), typeof (street_name), typeof (storey_range), typeof (floor_area_sqm), typeof (flat_model), typeof (lease_commence_date), typeof (resale_price), typeof (remaining_lease));
-  console.log(month, town, flat_type, block, street_name, storey_range, floor_area_sqm, flat_model, lease_commence_date, resale_price, remaining_lease);
-  id = await eel.getRecordId(month, town, flat_type, block, street_name, storey_range, floor_area_sqm, flat_model, lease_commence_date, resale_price, remaining_lease)();
-  console.log(id);
-  //window.location.href = 'view.html?recordId=' + id;
+
+
+function sendToView() {
+  window.location.href = 'view.html';
 }
 // function viewMap() {
 
