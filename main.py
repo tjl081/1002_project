@@ -1,3 +1,4 @@
+from logging import shutdown
 import eel
 import pandas as pd
 import json
@@ -14,7 +15,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import sys
 import requests #pip install requests
+from requests.structures import CaseInsensitiveDict
 from geopy.geocoders import Nominatim # pip install geopy
+from re import search
 
 db_object = None
 
@@ -238,15 +241,17 @@ def csvFormat(data):
     
 #     return pd_to_json(df)
 
+
+@eel.expose
 def getPostalCode(streetName, block):
     #initialize Nominatim API
     geolocator = Nominatim(user_agent="geoapiExercises")
 
     datatable = get_db()
-    geolocator = Nominatim(user_agent="geoapiExercises")
+    
 
     # datatable = get_db()
-    place =str(309)+ "," + "ANG MO KIO AVE 1"
+    place =str(block)+ "," + streetName
     location = geolocator.geocode(place)
 
     #traverse the data
@@ -265,23 +270,126 @@ def getPostalCode(streetName, block):
 def getRecordId(month,town,flat_type,block,street_name,storey_range,floor_area_sqm,flat_model,lease_commence_date,resale_price,remaining_lease):
     data_table = get_db()
     record = data_table.find_one({"month":month, "town":town,"flat_type":flat_type,"block":block,"street_name":street_name,"storey_range":storey_range,"floor_area_sqm":floor_area_sqm,"flat_model":flat_model,"lease_commence_date":lease_commence_date,"resale_price":resale_price,"remaining_lease":remaining_lease})
-    return record["_id"]
+    print(record["_id"])
+    return str(record["_id"])
 
 #get the record details by id
-@eel.expose
+# @eel.expose
 def getRecordByRecordId(id):
+    print(id)
     data_table = get_db()
     # cursor = data_table.find({'_id': id})
     # result = json.loads(dumps(cursor))
     # return result
     record = data_table.find_one({'_id': ObjectId(id) })
+    print(record)
     return record
 
+@eel.expose
+def getColumns(id):
+    print("in getColumns")
+    columnlist=[]
+    record_dict = getRecordByRecordId(id)
+    print(record_dict)
+    keylist = list(record_dict.keys())
+
+    for key in keylist:
+        if key == "_id":
+            continue
+        else:
+            columnlist.append(key)
+
+    print(columnlist)
+    return columnlist
+
+@eel.expose
+def getRow(id):
+    rowlist=[]
+    record_dict = getRecordByRecordId(id)
+    print(record_dict)
+    keylist = list(record_dict.values())
+
+    for key in keylist:
+        rowlist.append(key)
+
+    print(rowlist)
+    return rowlist
+
+#get place id
+def getPlacesId(postalcode):
+    geoapify = "https://api.geoapify.com/v1/geocode/search?postcode="+postalcode+"&apiKey=282342ec9baa42e2ba5897587f10f26c"
+    headers = CaseInsensitiveDict()
+    headers["Accept"] = "application/json"
+    resp2 = requests.get(geoapify,headers=headers)
+    newdict = resp2.json()
+    array = newdict['features']
+    placeid = ""
+    for dict in array:
+        properties = dict['properties']
+
+        placeid = properties['place_id']
+        # for value in dict['properties']:
+        #     print(value)
+        
+    return placeid
+
+
+#place details api
+# @eel.expose
+# def placeDetailsAPI():
+#     url = "https://api.geoapify.com/v2/place-details?id=id%3D514d368a517c511e40594bfd7b574ec84740f00103f90135335d1c00000000920313416e61746f6d697363686573204d757365756d&apiKey=282342ec9baa42e2ba5897587f10f26c"
+
+#     headers = CaseInsensitiveDict()
+#     headers["Accept"] = "application/json"
+
+#     resp = requests.get(url, headers=headers)
+
+#     print(resp.raw) 
 #display map
 # @eel.expose
 # def displayMap(postalcode):
 #     response = requests.get("https://developers.onemap.sg/commonapi/staticmap/getStaticImage?layerchosen=default&postal="+postalcode+"&zoom=17&height=512&width=512")
 #     return response
+
+@eel.expose
+def getplaces(postalcode,category):
+    placeid = getPlacesId(postalcode)
+    geoapify = "https://api.geoapify.com/v2/places?categories="+category+"&filter=place:"+placeid+"&limit=20&apiKey=282342ec9baa42e2ba5897587f10f26c"
+    headers = CaseInsensitiveDict()
+    headers["Accept"] = "application/json"
+    resp2 = requests.get(geoapify,headers=headers)
+    newdict = resp2.json()
+    print("newdict:" + newdict)
+    items = newdict['features']
+    newarray = []
+    # name_list = []
+    # amenity_list = []
+    # distance_list = []
+    # postcode_list = []
+    data_dict = {}
+    data_list=[]
+    for item in items:
+        newarray.append(item['properties'])
+    for i in newarray:
+        data_dict = {}
+        name = i['name']
+        raw = i['datasource']['raw']
+        amenity = raw['amenity']
+        distance = i['distance']
+        postcode = i['postcode']
+        # name_list.append(name)
+        # amenity_list.append(amenity)
+        # distance_list.append(distance)
+        # postcode_list.append(postcode)
+        data_dict['name'] = name
+        data_dict['amenity'] = amenity
+        data_dict['distance'] = distance
+        data_dict['postcode'] = postcode
+        data_list.append(data_dict)
+    return data_list
+
+
+
 
 if __name__ == "__main__":
     
@@ -289,7 +397,7 @@ if __name__ == "__main__":
     # mode value depends on preferred browser. should find a way to implement our own browser check
     print("main.py running") 
     # Call a Javascript function. the results are queued then displayed the moment the webpage starts up
-    eel.start('main.html', mode="chrome-app") # code seems to pause here while website is running.
+    eel.start('main.html', mode="chrome-app", shutdowndelay=10) # code seems to pause here while website is running.
 
 
 

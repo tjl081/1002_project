@@ -2,7 +2,7 @@
 // for the page
 
 var async_counter = 0
-var export_df=null
+var export_df = null
 console.log("js file linked");
 
 
@@ -45,7 +45,7 @@ async function query_data() {
 
   async_counter += 1 // flag to indicate if there are running async functions
   let df = await eel.query_db(input_dict)()
-  export_df=df
+  export_df = df
   console.log(df)
   console.log(typeof df)
   // //let df = await eel.query_csv(input_dict)()
@@ -113,7 +113,7 @@ function populate_dropdown(dropdown_json) {
 
 
 function populate_main_table(df) {
-  export_df=df
+  export_df = df
   console.log("populating main table")
   console.log(df)
   console.log(typeof df)
@@ -148,7 +148,7 @@ function populate_main_table(df) {
       for (var key of column_header_list) {
         //console.log(key + " -> " + df[0][key])
         //$( "#main-table tbody tr" ).append(`<th>${df[row_id][key]}</th>`);
-        table_values_html += `<td>${df[row_id][key]}</td>`
+        table_values_html += `<td id="${key}">${df[row_id][key]}</td>`
       }
 
       table_values_html += `<td><button onclick= "sendToView();">View</button></td>`
@@ -207,8 +207,24 @@ $(".data-query").on("input", function () {
 
 });
 
-function sendToView() {
-  window.location.href = 'view.html';
+async function sendToView() {
+  month = document.getElementById('month').innerHTML;
+  console.log(month);
+  town = document.getElementById('town').innerHTML;
+  flat_type = document.getElementById('flat_type').innerHTML;
+  block = document.getElementById('block').innerHTML;
+  street_name = document.getElementById('street_name').innerHTML;
+  storey_range = document.getElementById('storey_range').innerHTML;
+  floor_area_sqm = parseFloat(document.getElementById('floor_area_sqm').innerHTML);
+  flat_model = document.getElementById('flat_model').innerHTML;
+  lease_commence_date = parseInt(document.getElementById('lease_commence_date').innerHTML);
+  resale_price = parseFloat(document.getElementById('resale_price').innerHTML);
+  remaining_lease = document.getElementById('remaining_lease').innerHTML;
+  console.log(typeof (month), typeof (town), typeof (flat_type), typeof (block), typeof (street_name), typeof (storey_range), typeof (floor_area_sqm), typeof (flat_model), typeof (lease_commence_date), typeof (resale_price), typeof (remaining_lease));
+  console.log(month, town, flat_type, block, street_name, storey_range, floor_area_sqm, flat_model, lease_commence_date, resale_price, remaining_lease);
+  id = await eel.getRecordId(month, town, flat_type, block, street_name, storey_range, floor_area_sqm, flat_model, lease_commence_date, resale_price, remaining_lease)();
+  console.log(id);
+  //window.location.href = 'view.html?recordId=' + id;
 }
 // function viewMap() {
 
