@@ -5,6 +5,14 @@ var async_counter = 0
 var export_df = null
 console.log("js file linked");
 
+function sleep(milliseconds) {
+  const date = Date.now();
+  let currentDate = null;
+  do {
+    currentDate = Date.now();
+  } while (currentDate - date < milliseconds);
+}
+
 function toggletabs(evt, tabName) {
   var i, tabcontent, tablinks;
   tabcontent = document.getElementsByClassName("tab-content");
@@ -60,7 +68,7 @@ async function autoresolve_street_name(selected_street_name){
     street_name_filter_query = {"town": town_name}
   }
 
-  output_json = await eel.get_dropdown_values(dropdown_column_names, street_name_filter_query)()
+  output_json = await eel.get_dropdown_values("query_input", dropdown_column_names, street_name_filter_query)()
   populate_dropdown(output_json)
   
   $("#inputStreetName option").each(function()
@@ -137,7 +145,7 @@ async function query_data(){
 
       // if (Object.keys(df[row_id]).length == column_count) { // check if the number of values in a row matches the number of columns. just in case.
     checked_html = " "
-    if (fav_id_array.includes(df[row_id]['_id']['$oid'])){
+    if (fav_id_array && fav_id_array.includes(df[row_id]['_id']['$oid'])){
       checked_html = " checked"
     }
 
@@ -174,25 +182,29 @@ async function query_data(){
 
 
 function populate_dropdown(dropdown_json) {
-  //this function gets all unique values of a specified column, then compiles them in a JSON object,
+  //this function takes all unique values of a specified column in a JSON object from eel.get_dropdown_values(),
   //with the general format { key_name : [unique_value1, unique_value2] }
+  // and sets them all into the respective <select> elements
   console.log("populating dropdown")
   console.log("dropdown values")
   console.log(dropdown_json)
   console.log(typeof dropdown_json)
+
+  query_mode = dropdown_json["query_mode"]
+  delete dropdown_json["query_mode"];
   
   for (var key of Object.keys(dropdown_json)) { // for every selected column to get dropdown values for
 
-    selector_div = $(`select[data-field=${key}]`)
+    selector_div = $(`.${query_mode} select[data-field=${key}]`)
     dropdown_json[key].sort()
     for (var index in dropdown_json[key]){ // iterate through every value listed under the column name
       
       if (key == "month"){
-        $( "#inputEarliestDate" ).append(`<option>${dropdown_json[key][index]}</option>`);
-        $( "#inputLatestDate" ).append(`<option>${dropdown_json[key][index]}</option>`);
+        // $( "#inputEarliestDate" ).append(`<option>${dropdown_json[key][index]}</option>`);
+        // $( "#inputLatestDate" ).append(`<option>${dropdown_json[key][index]}</option>`);
+        $( `.${query_mode} select[data-field*=${key}]` ).append(`<option>${dropdown_json[key][index]}</option>`);
       }
       else{
-      
         selector_div.append(`<option>${dropdown_json[key][index]}</option>`);
       }
       
@@ -305,11 +317,109 @@ function populate_main_table(df) {
 
 }
 
-function displaygraph() {
-  eel.heatmap_plot();
-  $('#graph').append(`<img src= "/resources/heatmap.jpg">`);
+async function display_graphs(graph_url_json){
+
+  console.log(graph_url_json)
+  if (graph_url_json != null){
+    
+    for (var key of Object.keys(graph_url_json)){
+      console.log(key)
+      graph_category = key.slice(0, key.lastIndexOf('_'))
+      split_index = key.slice(key.lastIndexOf('_') + 1)
+
+      // $(`.${graph_category} img`).each(function(){ // clear all existing graphs
+      //   $(this).remove()
+      // })
+      console.log(`#${graph_category}_graph_${split_index}`)
+      //graph_div = $(`#${graph_category}_graph_${split_index} .graph_div`) // get jquery object of div to add graph in
+      graph_div = $(`#${graph_category}_graph_${split_index}`)
+      // graph_div.attr("src",`${graph_url_json[key]}`);
+      console.log("appending")
+      // html_code = `
+      //   <iframe width="900" height="800" frameborder="0" scrolling="no" class="embed-responsive-item" id="${key}" src="${graph_url_json[key]}"></iframe>
+      // `
+      url = graph_url_json[key].replace("web/", "")
+      timestamp = new Date().getTime();
+      html_code = `<img style="width: 80%;" class="img-fluid" id="${key}" src="${url + "?t=" + timestamp}" />`
+      $(`#${key}`).remove();
+      console.log(html_code)
+      graph_div.append(html_code)
+      // await $("#test").prepend(html_code)
+      
+      iframe = $(`#${key}`);
+      
+      // while (delay){
+      //   console.log("waiting")
+      // }
+      // console.log("appended")
+      
+      console.log(key)
+      
+    }
+    
+  }
+  
 }
 
+async function set_visible_graphs(){
+  // displayed_graphs = $("#setDisplayedGraphs").val()
+  // if (displayed_graphs != "none"){
+
+  // }
+  $("#setDisplayedGraphs option").each(function() // loop through all graph categories
+  {
+      if ($(this).is(':selected')){ // if graph category is selected, run setup code, then set it to visible
+        // initialise graphs
+        query_dict = { "graph_category" : $(this).val() }
+        cont = true
+        graph_counter = 0
+        
+        while (cont){
+          graph_element = $(`.${$(this).val()} div[graph-number=${graph_counter}]`) // for each graph element
+          query_dict[graph_counter] = {}
+          if (graph_element.length > 0){ // if a div with the correct graph number is found
+            dropdown_element = graph_element.find('select');
+            dropdown_element.each(function( index, selector ) { // for each dropdown value detected within a graph element
+              // console.log( index + ": " + $( this ).text() );
+              query_name = $(selector).attr("query-name")
+              input_value = $(selector).val()
+              console.log(query_name)
+              console.log(input_value)
+              query_dict[graph_counter][query_name] = input_value
+              
+              
+            });
+            graph_counter++ 
+          }
+          else{
+            break;
+          }
+        }
+        console.log(query_dict)
+
+        graph_urls = eel.query_graphs(query_dict)(display_graphs)
+        
+        $(`.${$(this).val()}`).css("display", "block");
+      }
+      else{
+        $(`.${$(this).val()}`).css("display", "none");
+      }
+  });
+}
+
+async function setup_graph(){
+  console.log("initialising graph controls")
+  dropdown_column_names = ["year_limit_5", "flat_type", "town"]
+  let result = await eel.get_dropdown_values("graph_input", dropdown_column_names, {})()
+  
+  populate_dropdown(result)
+  n = 'target_flat_type'
+  $(`#trends_graph_1_flat_type option`).eq(2).prop('selected', true);
+  set_visible_graphs()
+
+}
+
+ 
 function downloadCSV() {
   eel.csvFormat(export_df);
 }
@@ -317,14 +427,13 @@ function downloadCSV() {
 //EVENT LISTENERS
 $(document).ready( function () { // runs when the webpage loads
   console.log("document ready")
-  $("#graph").css("display", "none")
+  $(".graph").css("display", "none")
   dropdown_column_names = ["flat_type", "town", "street_name", "flat_model", "month" ] //specify all columns in dataset to pull all unique values for
-  eel.get_dropdown_values(dropdown_column_names, {})(populate_dropdown)
+  eel.get_dropdown_values("query_input", dropdown_column_names, {})(populate_dropdown)
   
   eel.query_db(null)(populate_main_table)
   
-  // toggletabs();
-  displaygraph();
+  setup_graph()
   // eel.get_main_graphs()()
 
   //remove the line below to allow persistence through page refreshes
@@ -340,18 +449,49 @@ $("#inputTown").on("input", function() {
     selected_street_name = $('#inputStreetName').val()
     autoresolve_street_name(selected_street_name)
   }
+  else if (selected_index == 0 && $('#inputStreetName').prop('selectedIndex') != 0){
+    // $('#inputStreetName').prop('selectedIndex', 0);
+    clear_dropdown(`select[data-field="street_name"]`)
+    autoresolve_street_name()
+  }
 
 
 });
+
+
+$("#setDisplayedGraphs").on("input", function() {
+  
+  set_visible_graphs()
+});
+
 
 $(".data-query").on("input", function() {
   //every time an input is detected, run query
   //can consider a delay so that a query isnt run every letter (assuming this is even an issue)
   query_data()
-  
-
 });
 
+$(".graph-query").on("input", function() {
+  id_value = $(this).attr('id')
+  parent_elem = $(this).closest('div[graph-number]')
+  graph_num = parent_elem.attr('graph-number')
+  parent_id = parent_elem.attr('id')
+  graph_category = parent_id.slice(0, parent_id.lastIndexOf("_graph_"))
+  query_dict = { "graph_category" : graph_category }
+  query_dict[graph_num] = {} // store query values
+  dropdown_element = parent_elem.find('select');
+  dropdown_element.each(function( index, selector ) { // for each dropdown value detected within a graph element
+    // console.log( index + ": " + $( this ).text() );
+    query_name = $(selector).attr("query-name")
+    input_value = $(selector).val()
+    query_dict[graph_num][query_name] = input_value
+    
+    
+  });
+  console.log(query_dict)
+  eel.query_graphs(query_dict)(display_graphs)
+
+});
 
 
 function sendToView() {

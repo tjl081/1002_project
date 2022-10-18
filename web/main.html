@@ -42,66 +42,76 @@
           </ul>
     </div>
   </div>
-  <div class="container">
+  <div id="test" class="container">
+    <!-- <iframe width="900" height="800" frameborder="0" scrolling="no" src="//plotly.com/~tjl081/8.embed"></iframe>
+      <iframe width="900" height="800" frameborder="0" scrolling="no" src="//plotly.com/~tjl081/147.embed"></iframe>
+      <iframe width="900" height="800" frameborder="0" scrolling="no" src="//plotly.com/~tjl081/193.embed"></iframe> -->
+      <!-- <iframe width="900" height="800" frameborder="0" scrolling="no" class="embed-responsive-item" class="graph_div" src="https://plotly.com/~tjl081/27/"></iframe>
+      <iframe width="900" height="800" frameborder="0" scrolling="no" class="embed-responsive-item" class="graph_div" src="https://plotly.com/~tjl081/8/"></iframe> -->
 
-    <div class="form-row">
+    <div class="query_input">
 
-      <div class="form-group col-md-2">
-        <label for="inputEarliestDate">Earliest date</label>
-        <select data-field="month_earliest" search-type="date_earliest" id="inputEarliestDate" class="data-query form-control">
-          <option class="placeholder">-- Any --</option>
-        </select>
+      <div class="form-row">
+        <div class="form-group col-md-2">
+          <label for="inputEarliestDate">Earliest date</label>
+          <select data-field="month_earliest" search-type="date_earliest" id="inputEarliestDate" class="data-query form-control">
+            <option class="placeholder">-- Any --</option>
+          </select>
+        </div>
+        <div class="form-group col-md-2">
+          <label for="inputLatestDate">Latest date</label>
+          <select data-field="month_latest" search-type="date_latest" id="inputLatestDate" class="data-query form-control">
+            <option class="placeholder">-- Any --</option>
+          </select>
+        </div>
+        <div class="form-group col-md-4">
+          <label for="inputFlatType">Flat Type</label>
+          <select data-field="flat_type" search-type="match_text" id="inputFlatType" class="data-query form-control">
+            <option class="placeholder">-- Any --</option>
+          </select>
+        </div>
+        <div class="form-group col-md-4">
+          <label for="inputFlatModel">Flat Model</label>
+          <select data-field="flat_model" search-type="match_text" id="inputFlatModel" class="data-query form-control">
+            <option class="placeholder">-- Any --</option>
+          </select>
+        </div>
+        <div class="form-group col-md-4">
+          <label for="inputTown">Town</label>
+          <select data-field="town" search-type="match_text" id="inputTown" class="data-query form-control">
+            <option class="placeholder">-- Any --</option>
+          </select>
+        </div>
+        <div class="form-group col-md-4">
+          <label for="inputStreetName">Street Name</label>
+          <select data-field="street_name" search-type="match_text" id="inputStreetName" class="data-query form-control">
+            <option class="placeholder">-- Any --</option>
+          </select>
+        </div>
       </div>
-      <div class="form-group col-md-2">
-        <label for="inputLatestDate">Latest date</label>
-        <select data-field="month_latest" search-type="date_latest" id="inputLatestDate" class="data-query form-control">
-          <option class="placeholder">-- Any --</option>
-        </select>
-      </div>
-      <div class="form-group col-md-4">
-        <label for="inputFlatType">Flat Type</label>
-        <select data-field="flat_type" search-type="match_text" id="inputFlatType" class="data-query form-control">
-          <option class="placeholder">-- Any --</option>
-        </select>
-      </div>
-      <div class="form-group col-md-4">
-        <label for="inputFlatModel">Flat Model</label>
-        <select data-field="flat_model" search-type="match_text" id="inputFlatModel" class="data-query form-control">
-          <option class="placeholder">-- Any --</option>
-        </select>
-      </div>
-      <div class="form-group col-md-4">
-        <label for="inputTown">Town</label>
-        <select data-field="town" search-type="match_text" id="inputTown" class="data-query form-control">
-          <option class="placeholder">-- Any --</option>
-        </select>
-      </div>
-      <div class="form-group col-md-4">
-        <label for="inputStreetName">Street Name</label>
-        <select data-field="street_name" search-type="match_text" id="inputStreetName" class="data-query form-control">
-          <option class="placeholder">-- Any --</option>
-        </select>
+
+      <div class="form-row">
+          <div class="form-group col-md-4">
+            <label for="inputBlockNumber">Block number</label>
+            <input data-field="block" search-type="" type="text" class="data-query form-control" id="inputBlockNumber">
+          </div>
+          <div class="form-group col-md-4">
+            <label for="inputLeaseCommenceYear">Lease commence date (year)</label>
+            <input data-field="lease_commence_date" search-type="" type="text" class="data-query form-control"
+              id="inputLeaseCommenceYear">
+          </div>
+          <div class="form-group col-md-4">
+            <label for="inputResalePrice">Resale price</label>
+            <input data-field="resale_price" search-type="" type="text" class="data-query form-control"
+              id="inputResalePrice">
+          </div>
+        </div>
       </div>
 
     </div>
+    
 
-    <div class="form-row">
-      <div class="form-group col-md-4">
-        <label for="inputBlockNumber">Block number</label>
-        <input data-field="block" search-type="" type="text" class="data-query form-control" id="inputBlockNumber">
-      </div>
-      <div class="form-group col-md-4">
-        <label for="inputLeaseCommenceYear">Lease commence date (year)</label>
-        <input data-field="lease_commence_date" search-type="" type="text" class="data-query form-control"
-          id="inputLeaseCommenceYear">
-      </div>
-      <div class="form-group col-md-4">
-        <label for="inputResalePrice">Resale price</label>
-        <input data-field="resale_price" search-type="" type="text" class="data-query form-control"
-          id="inputResalePrice">
-      </div>
-    </div>
-  </div>
+    
 
   </div>
 
@@ -109,9 +119,8 @@
 
   </div>
 
-
-
   <section>
+
     <!-- <ul class="nav nav-tabs">
       <li class="tablinks" ><a data-toggle="tab" href="#main-table">Table</a></li>
       <li class="tablinks"><a data-toggle="tab" href="#graph">Graph</a></li>
@@ -122,6 +131,7 @@
     </div>
     <div class="loader"></div>
     <div class="table tab-content" id="table_div">
+
       <!-- <div class="container"> -->
       <table id="main-table" data-toggle="table" data-toolbar="#toolbar" data-height="460" hidden>
         <thead>
@@ -140,21 +150,174 @@
     </div>
     <!-- <div class="tab-content"> -->
     <!-- <div class="container"> -->
-    <div id="graph" class="tab-content">
+    <div id="graph" class="tab-content graph_input container" style="display: none;">
+
       <!-- <img src="/resources/heatmap.jpg" alt="graph"> -->
-      <div class="form-group col-md-4">
+      <div class="container">
+        <div class="form-group col-md-4">
         <label for="setDisplayedGraphs">Graph category</label>
-        <select id="setDisplayedGraphs" class="data-query form-control">
+        <select id="setDisplayedGraphs" class="form-control">
+          <option value="none" selected>---</option>
           <option value="pie_chart">Pie chart</option>
           <option value="bar_graph">Bar graph</option>
           <option value="trends">Trends</option>
         </select>
+      </div>
+      </div>
+      
+
+      <div class="pie_chart container" style="display: none;">
+        Pie chart
+        <div class="container" id="pie_chart_graph_0" graph-number="0">
+          
+          <!-- <div class="embed-responsive embed-responsive-16by9">
+            <iframe width="900" height="800" frameborder="0" scrolling="no" class="embed-responsive-item" class="graph_div" src=""></iframe>
+          </div> -->
+          <!-- <iframe width="900" height="800" frameborder="0" scrolling="no" class="embed-responsive-item" class="graph_div" src="https://plotly.com/~tjl081/27/"></iframe> -->
+          <!-- <iframe width="900" height="800" frameborder="0" scrolling="no" class="embed-responsive-item" class="graph_div" src="https://plotly.com/~tjl081/8/"></iframe> -->
+          
+        </div>
+        <div class="container" id="pie_chart_graph_1" graph-number="1">
+
+          <div class="container">
+            <div class="form-group col-md-2">
+              <label for="pie_chart_graph_1_earliest_year">Earliest Year</label>
+              <select data-field="month_earliest" query-name="month_earliest" id="pie_chart_graph_1_earliest_year" class="graph-query form-control">
+                
+              </select>
+            </div>
+            <div class="form-group col-md-2">
+              <label for="pie_chart_graph_1_town">Town</label>
+              <select data-field="town" query-name="target_town" id="pie_chart_graph_1_town" class="graph-query form-control">
+                
+              </select>
+            </div>
+          </div>
+          
+          <!-- <iframe width="900" height="800" frameborder="0" scrolling="no" class="embed-responsive-item" class="graph_div" src="https://plotly.com/~tjl081/8/"></iframe> -->
+          <!-- <div class="embed-responsive embed-responsive-16by9">
+            <iframe width="900" height="800" frameborder="0" scrolling="no" class="embed-responsive-item" class="graph_div" src=""></iframe>
+          </div> -->
+          
+        </div>
+        
+      </div>
+
+      <div class="bar_graph container" style="display: none;">
+        Bar graph
+        <div class="container" id="bar_graph_graph_0" graph-number="0">
+          <div class="container">
+            <div class="form-group col-md-2">
+              <label for="bar_graph_graph_0_target_year">Target Year</label>
+              <select data-field="month_earliest" query-name="target_year" id="bar_graph_graph_0_target_year" class="graph-query form-control">
+                
+              </select>
+            </div>
+            
+            <div class="form-group col-md-2">
+              <label for="bar_graph_graph_0_town">Town</label>
+              <select data-field="town" query-name="target_town" id="bar_graph_graph_0_town" class="graph-query form-control">
+                
+              </select>
+            </div>
+          </div>
+          
+        </div>
+        <div class="container" id="bar_graph_graph_1" graph-number="1">
+          <div class="container">
+            <div class="form-group col-md-2">
+              <label for="bar_graph_graph_1_target_year">Target Year</label>
+              <select data-field="month_earliest" query-name="target_year" id="bar_graph_graph_1_target_year" class="graph-query form-control">
+                
+              </select>
+            </div>
+            
+            <div class="form-group col-md-2">
+              <label for="bar_graph_graph_1_town">Town</label>
+              <select data-field="town" query-name="target_town" id="bar_graph_graph_1_town" class="graph-query form-control">
+                
+              </select>
+            </div>
+          </div>
+          
+        </div>
+        <div class="container" id="bar_graph_graph_2" graph-number="2">
+          <div class="container">
+            <div class="form-group col-md-2">
+              <label for="bar_graph_graph_2_target_year">Target Year</label>
+              <select data-field="month_earliest" query-name="target_year" id="bar_graph_graph_2_target_year" class="graph-query form-control">
+                
+              </select>
+            </div>
+            
+            <div class="form-group col-md-2">
+              <label for="bar_graph_graph_2_town">Town</label>
+              <select data-field="town" query-name="target_town" id="bar_graph_graph_2_town" class="graph-query form-control">
+                
+              </select>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+      <div class="trends container" style="display: none;">
+        Trends
+        <div class="container" id="trends_graph_0" graph-number="0">
+
+          <div class="container">
+            <div class="form-group col-md-2">
+              <label for="trends_graph_0_earliest_year">Earliest Year</label>
+              <select data-field="month_earliest" query-name="month_earliest" id="trends_graph_1_earliest_year" class="graph-query form-control">
+                
+              </select>
+            </div>
+  
+            <div class="form-group col-md-2">
+              <label for="trends_graph_0_flat_type">Flat Type</label>
+              <select data-field="flat_type" query-name="target_flat_type" id="trends_graph_1_flat_type" class="graph-query form-control">
+                
+              </select>
+            </div>
+
+            <div class="form-group col-md-2">
+              <label for="trends_graph_0_town">Town</label>
+              <select data-field="town" query-name="target_town" id="trends_graph_1_town" class="graph-query form-control">
+                
+              </select>
+            </div>
+          </div>
+          
+
+        </div>
+
+        <div class="container" id="trends_graph_1" graph-number="1">
+
+          <div class="container">
+            <div class="form-group col-md-2">
+              <label for="trends_graph_1_earliest_year">Earliest Year</label>
+              <select data-field="month_earliest" query-name="month_earliest" id="trends_graph_1_earliest_year" class="graph-query form-control">
+                
+              </select>
+            </div>
+  
+            <div class="form-group col-md-2">
+              <label for="trends_graph_1_town">Town</label>
+              <select data-field="town" query-name="target_town" id="trends_graph_1_town" class="graph-query form-control">
+                
+              </select>
+            </div>
+          </div>
+          
+      </div>
+      
+      
     </div>
     <!-- </div> -->
     <!-- </div> -->
   </section>
 
-  <div class="navbar fixed-bottom" style="padding-bottom: 70px;"></div>
+  <div class="navbar fixed-bottom" style="padding-bottom: 70px;margin-top: 50px;"></div>
 
   <script type="text/javascript" src="/eel.js"></script>
 
