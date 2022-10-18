@@ -1040,6 +1040,7 @@ def query_db(search_query_dict, result_limit = 2000):
     if search_query_dict:  
         # if a query dict is specified, the code here runs to filter results
         query_list = []
+        pipeline = []
         # search_query_dict format is { column_name : {"search_type": "...", "value": "..."} }
         for key,value in search_query_dict.items():  # for each *column to search* : *search value*
             search_value = value["value"]
@@ -1059,15 +1060,27 @@ def query_db(search_query_dict, result_limit = 2000):
             elif search_value:
                 if value["search_type"] == "match_text":
                     # must match value. Acceptable to use here, since dropdowns take values from the data itself
-                    query_list.append({key: {"$eq": search_value}}) 
+                    query_list.append({key: {"$eq": search_value}})
+                elif value["search_type"] == "number":
+                    pipeline = [
+                            {"$addFields": { key + '_temp_str' : { '$toString' : '$' + key} }},
+                            # {"$match": {"temp_str": f"/{search_value}/"}},
+                        ]
+                    query_list.append({key + '_temp_str': {"$regex" : f".*{search_value}.*"}})
+                    # result = pd.DataFrame(list(data_table.aggregate(pipeline)))
                 else:
                     # as a catch-all, if i do not specify the search_type value
                     query_list.append({key: {"$regex" : f".*{search_value}.*"}}) # search if string contains, case insensitive
 
         # search_query_dict = {})
-        print(query_list)
-        cursor = data_table.find({"$and" : query_list}, limit=result_limit).sort("month", -1)
-        # exclude _id column, sort by month descending
+
+        if not pipeline:
+            print(query_list)
+            cursor = data_table.find({"$and" : query_list}, limit=result_limit).sort("month", -1)
+        else:
+            pipeline.append({ "$match": {"$and" : query_list} })
+            print(pipeline)
+            cursor = data_table.aggregate(pipeline)
     else:
         # else, get everything, limit results via result_limit
         cursor = data_table.find({}, limit=result_limit).sort("month", -1)
