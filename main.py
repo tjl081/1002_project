@@ -22,7 +22,7 @@ import plotly.express as px
 # pip install -U kaleido
 import chart_studio.plotly as py
 import plotly.graph_objects as go
-import numpy as np
+import time
 
 
 db_object = None
@@ -1222,6 +1222,18 @@ def getRecordByRecordId(id):
 # def displayMap(postalcode):
 #     response = requests.get("https://developers.onemap.sg/commonapi/staticmap/getStaticImage?layerchosen=default&postal="+postalcode+"&zoom=17&height=512&width=512")
 #     return response
+
+# def eel_close_callback(path, socketlist):
+#     time.sleep(3)
+#     PATH = os.getcwd() + '\\web\\images\\'
+#     file_list = os.listdir(PATH)
+
+#     if not socketlist: # if socketlist is empty (if no more browsers are connected to the server)
+#         print("Web server shutting down")
+#         for item in file_list: # clear all plotly HTML files due to its large file size causing eel.start to take 1min+
+#             if item.endswith(".html"):
+#                 os.remove(os.path.join(PATH, item))
+#         exit()
 
 if __name__ == "__main__":
     

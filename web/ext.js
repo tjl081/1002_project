@@ -342,7 +342,7 @@ async function display_graphs(graph_url_json){
       timestamp = new Date().getTime();
       html_code = `
       <div class="container ${key}">
-        <a href="${url + ".html"}" class="link-primary" target="_blank">Click here to interact with the graph!</a>
+        <a style="display: block;" href="${url + ".html"}" class="link-primary" target="_blank">Click here to interact with the graph!</a>
         <img style="width: 80%;" class="img-fluid" id="${key}" src="${url + ".png?t=" + timestamp}" />
       </div>
       `

@@ -41,7 +41,7 @@ async function generate_graph(housing_data){
     $("#prediction_graph").remove();
     // html_code = `<img style="width: 80%;" class="img-fluid" id="prediction_graph" src="${url + "?t=" + timestamp}" />`
     html_code = `
-      <a href="${url + ".html"}" class="link-primary" target="_blank">Click here to interact with the graph!</a>
+      <a style="display: block;" href="${url + ".html"}" class="link-primary" target="_blank">Click here to interact with the graph!</a>
       <img style="width: 80%;" class="img-fluid" id="prediction_graph" src="${url + ".png?t=" + timestamp}" />
       `
     $(".prediction_graph_container").prepend(html_code)
