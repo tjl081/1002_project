@@ -5,6 +5,14 @@ var async_counter = 0
 var export_df = null
 console.log("js file linked");
 
+function sleep(milliseconds) {
+  const date = Date.now();
+  let currentDate = null;
+  do {
+    currentDate = Date.now();
+  } while (currentDate - date < milliseconds);
+}
+
 function toggletabs(evt, tabName) {
   var i, tabcontent, tablinks;
   tabcontent = document.getElementsByClassName("tab-content");
@@ -60,7 +68,7 @@ async function autoresolve_street_name(selected_street_name) {
     street_name_filter_query = { "town": town_name }
   }
 
-  output_json = await eel.get_dropdown_values(dropdown_column_names, street_name_filter_query)()
+  output_json = await eel.get_dropdown_values("query_input", dropdown_column_names, street_name_filter_query)()
   populate_dropdown(output_json)
 
   $("#inputStreetName option").each(function () {
@@ -136,7 +144,7 @@ async function query_data() {
 
       // if (Object.keys(df[row_id]).length == column_count) { // check if the number of values in a row matches the number of columns. just in case.
       checked_html = " "
-      if (fav_id_array.includes(df[row_id]['_id']['$oid'])) {
+      if (fav_id_array && fav_id_array.includes(df[row_id]['_id']['$oid'])) {
         checked_html = " checked"
       }
 
@@ -173,8 +181,9 @@ async function query_data() {
 
 
 function populate_dropdown(dropdown_json) {
-  //this function gets all unique values of a specified column, then compiles them in a JSON object,
+  //this function takes all unique values of a specified column in a JSON object from eel.get_dropdown_values(),
   //with the general format { key_name : [unique_value1, unique_value2] }
+  // and sets them all into the respective <select> elements
   console.log("populating dropdown")
   console.log("dropdown values")
   console.log(dropdown_json)
@@ -182,7 +191,7 @@ function populate_dropdown(dropdown_json) {
 
   for (var key of Object.keys(dropdown_json)) { // for every selected column to get dropdown values for
 
-    selector_div = $(`select[data-field=${key}]`)
+    selector_div = $(`.${query_mode} select[data-field=${key}]`)
     dropdown_json[key].sort()
     for (var index in dropdown_json[key]) { // iterate through every value listed under the column name
 
@@ -304,13 +313,16 @@ function populate_main_table(df) {
 
 }
 
-// function displaygraph() {
-//   eel.heatmap_plot();
-//   $('#graph').append(`<img src= "/resources/heatmap.jpg">`);
-// }
+function displaygraph() {
+  eel.heatmap_plot();
+  $('#graph').append(`<img src= "/resources/heatmap.jpg">`);
+}
 
 function downloadCSV() {
-  eel.csvFormat(export_df);
+  // eel.csvFormat(export_df);
+  input_dict = retrieve_input_values()
+
+  eel.query_db(input_dict, 0, true)()
 }
 
 //EVENT LISTENERS
@@ -323,7 +335,7 @@ $(document).ready(function () { // runs when the webpage loads
   eel.query_db(null)(populate_main_table)
 
   // toggletabs();
-  //displaygraph();
+  displaygraph();
   // eel.get_main_graphs()()
 
   //remove the line below to allow persistence through page refreshes
@@ -339,8 +351,19 @@ $("#inputTown").on("input", function () {
     selected_street_name = $('#inputStreetName').val()
     autoresolve_street_name(selected_street_name)
   }
+  else if (selected_index == 0 && $('#inputStreetName').prop('selectedIndex') != 0) {
+    // $('#inputStreetName').prop('selectedIndex', 0);
+    clear_dropdown(`select[data-field="street_name"]`)
+    autoresolve_street_name()
+  }
 
 
+});
+
+
+$("#setDisplayedGraphs").on("input", function () {
+
+  set_visible_graphs()
 });
 
 $(".data-query").on("input", function () {
@@ -350,6 +373,7 @@ $(".data-query").on("input", function () {
 
 
 });
+
 
 
 
