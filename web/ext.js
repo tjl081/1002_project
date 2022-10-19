@@ -421,7 +421,10 @@ async function setup_graph(){
 
  
 function downloadCSV() {
-  eel.csvFormat(export_df);
+  // eel.csvFormat(export_df);
+  input_dict = retrieve_input_values()
+
+  eel.query_db(input_dict, 0, true)()
 }
 
 //EVENT LISTENERS

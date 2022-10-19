@@ -1022,7 +1022,7 @@ def get_dropdown_values(query_mode, column_names = [], query_dict = {}):
 
 
 @eel.expose
-def query_db(search_query_dict, result_limit = 2000):
+def query_db(search_query_dict, result_limit = 2000, export = False):
     DATE_COLUMN_NAME = "month"
     ID_COLUMN_NAME = "_id"
     data_table = get_db()
@@ -1076,26 +1076,39 @@ def query_db(search_query_dict, result_limit = 2000):
 
         if not pipeline:
             print(query_list)
-            cursor = data_table.find({"$and" : query_list}, limit=result_limit).sort("month", -1)
+            cursor = data_table.find({"$and" : query_list}, limit=result_limit)
         else:
             pipeline.append({ "$match": {"$and" : query_list} })
             print(pipeline)
             cursor = data_table.aggregate(pipeline)
     else:
         # else, get everything, limit results via result_limit
-        cursor = data_table.find({}, limit=result_limit).sort("month", -1)
+        cursor = data_table.find({}, limit=result_limit)
     print(f"Query done in {(datetime.now() - initial_time).total_seconds()}")
-    initial_time = datetime.now()
-    result = json.loads(dumps(cursor))
-    print(f"JSON conversion done in {(datetime.now() - initial_time).total_seconds()}")
+    
 
-    return result
+    if export:
+        print("Exporting data as CSV")
+        initial_time = datetime.now()
+        df = pd.DataFrame(list(cursor))
+        print(df.info())
+        PATH = os.getcwd() + '\\web\\resources\\queryData.csv'
+        df.to_csv(PATH)
+        print(f"CSV conversion done in {(datetime.now() - initial_time).total_seconds()}")
+        return True
+    else:
+        initial_time = datetime.now()
+        cursor = cursor.sort("month", -1)
+        result = json.loads(dumps(cursor))
+        print(f"JSON conversion done in {(datetime.now() - initial_time).total_seconds()}")
+        return result
     
     # 2000
 @eel.expose
 def csvFormat(data): 
-
-    PATH = os.getcwd() + '\\web\\resources\\'
+    # usage has been phased out for the main table, but the favourites table still uses this function
+    # due to how it operates (in that the source of the data is retrieved from the front end)
+    PATH = os.getcwd() + '\\web\\resources\\queryData.csv'
     key = data[0].keys()
     
     with open(PATH + 'queryData.csv', 'w', newline='') as file:
