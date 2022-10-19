@@ -1261,42 +1261,39 @@ def getplaces(postalcode,category):
     #print("postalcode in getplaces is: " + postalcode + ",Category is: " + category)
     placeid = getPlacesId(postalcode)
     #print("placeid: " + placeid)
-    geoapify = "https://api.geoapify.com/v2/places?categories="+category+"&filter=place:"+placeid+"&limit=20&apiKey=282342ec9baa42e2ba5897587f10f26c"
-    print(geoapify)
-    headers = CaseInsensitiveDict()
-    headers["Accept"] = "application/json"
-    resp2 = requests.get(geoapify,headers=headers)
-    newdict = resp2.json()
-    print("printing newdict")
-    pprint(newdict)
-    items = newdict['features']
-    newarray = []
-    # name_list = []    
-    # amenity_list = []
-    # distance_list = []
-    # postcode_list = []
-    data_dict = {}
-    data_list=[]
-    for item in items:
-        newarray.append(item['properties'])
-    for i in newarray:
-        print("print i")
-        pprint(i)
+    try:
+        geoapify = "https://api.geoapify.com/v2/places?categories="+category+"&filter=place:"+placeid+"&limit=50&apiKey=282342ec9baa42e2ba5897587f10f26c"
+        print(geoapify)
+        headers = CaseInsensitiveDict()
+        headers["Accept"] = "application/json"
+        resp2 = requests.get(geoapify,headers=headers)
+        newdict = resp2.json()
+        print("printing newdict")
+        pprint(newdict)
+        items = newdict['features']
+        newarray = []
+    
         data_dict = {}
-        name = i['address_line1']
-        raw = i['datasource']['raw']
-        amenity = raw['amenity']
-        distance = i['distance']
-        postcode = i['postcode']
-        # name_list.append(name)
-        # amenity_list.append(amenity)
-        # distance_list.append(distance)
-        # postcode_list.append(postcode)
-        data_dict['name'] = name
-        data_dict['amenity'] = amenity
-        data_dict['distance'] = distance
-        data_dict['postcode'] = postcode
-        data_list.append(data_dict)
+        data_list=[]
+        for item in items:
+            newarray.append(item['properties'])
+        for i in newarray:
+            print("print i")
+            pprint(i)
+            data_dict = {}
+            name = i['address_line1']
+            # raw = i['datasource']['raw']
+            # amenity = raw['amenity']
+            distance = i['distance']
+            postcode = i['postcode']
+       
+            data_dict['name'] = name
+            # data_dict['amenity'] = amenity
+            data_dict['distance'] = distance
+            data_dict['postcode'] = postcode
+            data_list.append(data_dict)
+    except requests.exceptions.ConnectionError:
+        print('connection error occurred')
     return data_list
 
 if __name__ == "__main__":

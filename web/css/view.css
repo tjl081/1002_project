@@ -7,10 +7,7 @@
 
 
 
-.flex-item-right {
-    /* background-color: dodgerblue; */
-    flex: 90%;
-}
+
 
 
 table,
@@ -19,15 +16,22 @@ table,
     margin: 10px 0;
     font-size: 0.9em;
     font-family: sans-serif;
-    min-width: 200px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    /* min-width: 200px; */
+}
+
+#facil-table {
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 0.6em;
+    width: 100%;
 }
 
 table thead tr,
 #facil-table thead tr {
-    background-color: #009879;
+    background-color: #6b6a6a;
     color: #ffffff;
-    text-align: left;
+    text-align: center;
 }
 
 table th,
@@ -37,7 +41,9 @@ td {
     padding: 12px 15px;
 }
 
-
+#categories {
+    font-size: 15px;
+}
 
 
 
@@ -45,6 +51,16 @@ td {
     display: flex;
     padding: 10px;
 }
+
+
+#facilities {
+    margin-left: 2em;
+    margin-right: auto;
+}
+
+/* #facilities h2 {
+    padding: 10px;
+} */
 
 /* Responsive layout - makes a one column-layout instead of a two-column layout
 @media (max-width: 800px) {
