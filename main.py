@@ -1,35 +1,32 @@
+import csv
 import eel
+from datetime import datetime
+import os
+import glob
 import pandas as pd
 import json
 from bson.json_util import dumps # converts mongodb cursor into python suitable 
 from bson.son import SON
-import glob
-import os
-from pymongo import MongoClient # pip install "pymongo[srv]"
 from bson.objectid import ObjectId #mongodb objectid
-from datetime import datetime
-import csv
-import numpy as np
-import matplotlib
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import sys
+from pymongo import MongoClient # pip install "pymongo[srv]"
 import requests #pip install requests
 from requests.structures import CaseInsensitiveDict
 from geopy.geocoders import Nominatim # pip install geopy
-from MLModel import ML_Model
 import chart_studio
 import plotly.express as px
 # pip install -U kaleido
-import chart_studio.plotly as py
-import plotly.graph_objects as go
-import numpy as np
-from re import search
+import chart_studio.plotly as py  # for exporting the graph to an API. scrapped due to upload limit of 100
 from pprint import pprint
 
+# custom imports
+from MLModel import ML_Model
 
-db_object = None
+
+# global variables: so we dont need to re-initialise certain objects
+db_object = None  # object to run pymongo functions to query the online database
+
 machine_learning = None
+# object to hold the machine learning model, so i dont have to retrain it every time i open the machine learning page
 
 
 def pd_to_json(df):
@@ -44,6 +41,8 @@ def get_db():
     if db_object is None:
         PATH = os.getcwd() + '\\data\\'
         CONNECTION_STR = ""
+
+        # open txt file containing URL with credentials to connect to MongoDB Atlas
         with open(PATH + '/access_url.txt', 'r') as f:
             CONNECTION_STR = f.readline()
         print(CONNECTION_STR)
@@ -69,13 +68,13 @@ def pie_chart_of_column(column_name, quantity_name, graph_title, filter_query = 
     """returns a pie chart showing the count (and therefore percentage) of all unique values of an input column name.
     add second argument to apply $match filter on target column. filter_query should match .find() filter dictionary format"""
     db = get_db()
-    pipeline = [
+    pipeline = [  # this pipeline gets the occurrence value of every distinct value of column_name 
         {"$unwind": '$' + column_name},
         {"$group": {"_id": '$' + column_name, "count": {"$sum": 1}}},
         {"$sort": SON([("count", -1), ("_id", -1)])}
     ] # https://pymongo.readthedocs.io/en/stable/examples/aggregation.html
 
-    if filter_query:
+    if filter_query: # if included, applies a filter to limit the data pool from where pipeline processes the data 
         pipeline.insert(0, {"$match": filter_query})
 
     initial_time = datetime.now()
@@ -92,22 +91,6 @@ def pie_chart_of_column(column_name, quantity_name, graph_title, filter_query = 
     return fig
 
 
-#     not feasible: data size too large to upload to chart studio unless i pay
-# def trend_line_graph(date_column_name, y_column_name, earliest_year, filter_query):
-#     db = get_db()
-#     cursor = db.find(filter_query)
-#     df = pd.DataFrame(list(cursor))
-#     # new_df = df[]
-#     df = df[[date_column_name, y_column_name]]
-#     x_axis = pd.to_datetime(df[date_column_name])
-#     y_axis = df[y_column_name]
-#     print(df)
-#     fig = go.Figure()
-#     fig = fig.add_trace(go.Scatter(x=x_axis, y=y_axis))
-#     fig = px.line(df, x=x_axis, y=y_axis, title=f"Trend of {y_column_name} since {earliest_year} with range slider and selectors")
-#     return fig
-
-
 def historic_line_graph(x_column_name, y_columnm_name, filter_column, graph_title, filter_query):
     """'x_column_name' and 'y_column_name' define the names of the columns which will have their values 
     assigned to the x and y axis of the line graph respectively"""
@@ -122,6 +105,10 @@ def historic_line_graph(x_column_name, y_columnm_name, filter_column, graph_titl
 
 
 def sum_line_graph_by_columns(groupby_column_name_list, x_name, y_name, graph_title, filter_query):
+    """takes a result from a .find query and groups the results by groupby_column_name_list.
+
+    x_name and y_name to define the x and y axis of the line graph
+    """
     db = get_db()
     cursor = db.find(filter_query)
     df = pd.DataFrame(list(cursor))
@@ -131,9 +118,11 @@ def sum_line_graph_by_columns(groupby_column_name_list, x_name, y_name, graph_ti
 
 
 def aggregated_bar_graph(qty_name, pipeline_list, graph_title):
-
+    """converts the result of a pymongo aggregate to a bar graph, displaying a value that requires aggregate to obtain 
+    e.g: frequency of each flat type, """
     db = get_db()
-    if not any("$sort" in d for d in pipeline_list):
+    if not any("$sort" in x for x in pipeline_list): 
+        # if no result sort configs are set in pipeline_list, set a default config
         pipeline_list.append({"$sort": SON([("count", -1), ("_id", -1)])})
     
     result = pd.DataFrame(list(db.aggregate(pipeline_list)))
@@ -147,7 +136,24 @@ def aggregated_bar_graph(qty_name, pipeline_list, graph_title):
 
 @eel.expose
 def query_graphs(input_dict):
+    """Takes in input_dict, a specifically formatted JSON/python dictionary which specifies which graphs to generate and return
+
+    Sample input_dict format:
+    { 
+        "graph_category" : "_____", 
+        0 : {values}, 
+        1 : {values} 
+    }
     
+    where graph_category specifies what category of graphs to get (e.g. pie chart, bar graph), and the number specifies which graph to get.
+    The {values} depends on the graph in question. Check if statements for each graph.
+    
+    If a number is missing from the graph, the result will simply not return the graph (for cases where query_graphs(input_dict) is run 
+    to obtain specific graphs instead of the entire category)
+
+    result returns e.g.: {'pie_chart_0': 'web/images/pie_chart_0', 'pie_chart_1': 'web/images/pie_chart_1'}, 
+    where each key is *graph category* + "_" + *graph number*, and each value is the hyperlink (excluding file extension as this function generates HTML and PNG)
+    """
     # input_dict format should be { "graph_category" : "_____", 0 : {values}, 1 : {values} }
     # where the number corresponsds to which graphs to plot and generate URLs for
     print("Querying graphs")
@@ -346,8 +352,7 @@ def query_graphs(input_dict):
             ]
             graph_title = f"Average Resale price of the {category_name} in {target_town} on {target_year}"
             fig = aggregated_bar_graph(y_column, pipeline_list, graph_title)
-            fig.update_layout(xaxis_title = "Flat Types", yaxis_title = "Average Resale Prices"
-            )
+            fig.update_layout(xaxis_title = "Flat Types", yaxis_title = "Average Resale Prices")
             # Add dropdown
             fig.update_layout(
                 updatemenus=[
@@ -461,6 +466,7 @@ def query_graphs(input_dict):
             ]
             graph_title = f"Total sales of {category_name} sold in {target_town} on {target_year}"
             fig = aggregated_bar_graph(pipeline_result, pipeline_list, graph_title)
+            fig.update_layout(xaxis_title = "Flat Types", yaxis_title = "Total sale price")
             # Add dropdown
             fig.update_layout(
                 updatemenus=[
@@ -518,359 +524,11 @@ def query_graphs(input_dict):
     return output_dict
 
 
-# @eel.expose
-# def get_main_graphs():
-#     # run all functions to produce graphs here
-#     # return a list of iframe URLs
-#     earliest_year = datetime.today().year - 5
-#     output_dict = {}
-
-#     distinct_val_count_column = "flat_model"
-#     qty_label = "number_of_flats_sold"
-#     graph_title = "Flat models sold since 1990s"
-#     fig = pie_chart_of_column(distinct_val_count_column, qty_label, graph_title)
-#     fig.update_traces(textposition='inside', textinfo='percent+label')
-#     fig.update_layout(title_font_size = 30)
-#     url = py.plot(fig, filename = f'{distinct_val_count_column}_distinct_count', auto_open=False)
-#     output_dict[graph_title] = url
-
-#     # date_column_name = "month"
-#     # y_column_name = "resale_price"
-#     # filter_query = { "$and" : [ { "month" : {"$gte": "2021" + "-01"}} ] }
-#     # fig = trend_line_graph(date_column_name, y_column_name, 2021, filter_query)
-#     # fig.update_layout(title_text="Trend of resale prices for the past 5 years with range slider and selectors")
-#     # fig.update_layout(
-#     #     xaxis={
-#     #         "rangeselector" : {
-#     #             "buttons" : [
-#     #                 {"count" : 1,
-#     #                     "label" : "1m",
-#     #                     "step" : "month",
-#     #                     "stepmode" : "backward"},
-#     #                 {"count" : 6,
-#     #                     "label" : "6m",
-#     #                     "step" : "month",
-#     #                     "stepmode" : "backward"},
-#     #                 {"count" : 1,
-#     #                     "label" : "Year to latest date",
-#     #                     "step" : "year",
-#     #                     "stepmode" : "todate"},
-#     #                 {"count" : 1,
-#     #                     "label" : "1y",
-#     #                     "step" : "year",
-#     #                     "stepmode" : "backward"},
-#     #                 {"step" : "all"}
-#     #             ]
-#     #         },
-#     #         "rangeslider" : {
-#     #             "visible" : True
-#     #         },
-#     #         "type" : "date"
-#     #     }
-#     # )
-#     # fig.update_layout(
-#     #     xaxis_title="Year", yaxis_title="Resale Prices"
-#     # )
-#     # url = py.plot(fig, filename = f'{y_column_name}_trend', auto_open=False)
-#     # output_dict[graph_title] = url
-    
-
-#     distinct_val_count_column = "flat_type"
-#     qty_label = "number_of_flat_type_sold"
-#     target_town = "ANG MO KIO"
-#     graph_title = f"Flat type sold in {target_town} since 2017"
-#     filter_query = { "$and" : [ { "month" : {"$gte": str(earliest_year) + "-01"}}, { "town" : {"$eq": target_town}} ] }
-#     fig = pie_chart_of_column(distinct_val_count_column, qty_label, graph_title, filter_query)
-#     fig.update_layout(
-#         updatemenus = [
-#             {
-#                 "buttons" : [
-#                     {
-#                         "args" : ["type", "pie"],
-#                         "label" : "Pie Chart",
-#                         "method" : "restyle"
-#                     },
-#                     {
-#                         "args" : ["type", "bar"],
-#                         "label" : "Bar Graph",
-#                         "method" : "restyle"
-#                     }
-
-#                 ],
-#                 "direction" : "down",
-#                 "pad" : {"r": 10, "t": 10},
-#                 "showactive" : True,
-#                 "x" : 0,
-#                 "xanchor" : "left",
-#                 "y" : 1.135,
-#                 "yanchor" : "top"
-#             },
-#         ],
-#         title_font_size = 25
-#     )
-#     fig.update_traces(textposition = 'inside', textinfo = 'percent+label')
-#     url = py.plot(fig, filename = f'{distinct_val_count_column}_distinct_count', auto_open=False)
-#     output_dict[graph_title] = url
-
-#     x_column_name = "month"
-#     y_columnm_name = "resale_price"
-#     filter_column = "flat_type"
-#     filter_value = "4 ROOM"
-#     target_town = "ANG MO KIO"
-#     filter_query = { "$and" : [ 
-#         { "month" : {"$gte": str(earliest_year) + "-01"}}, 
-#         { "town" : {"$eq": target_town}},
-#         { filter_column : {"$eq": filter_value}}
-#         ] }
-#     graph_title = f"Resale prices of {filter_value} flats"
-#     fig = historic_line_graph(x_column_name, y_columnm_name, filter_column, graph_title, filter_query)
-#     fig.update_layout(xaxis_title = "Year", yaxis_title = "Resale Prices")
-#     fig.update_layout(
-#         xaxis={
-#             "rangeselector" : {
-#                 "buttons" : [
-#                     {"count" : 1,
-#                          "label" : "1m",
-#                          "step" : "month",
-#                          "stepmode" : "backward"},
-#                     {"count" : 6,
-#                          "label" : "6m",
-#                          "step" : "month",
-#                          "stepmode" : "backward"},
-#                     {"count" : 1,
-#                          "label" : "Current year to latest date",
-#                          "step" : "year",
-#                          "stepmode" : "todate"},
-#                     {"count" : 1,
-#                          "label" : "1y",
-#                          "step" : "year",
-#                          "stepmode" : "backward"},
-#                     {"count" : 3,
-#                          "label" : "Past 3 years",
-#                          "step" : "year",
-#                          "stepmode" : "backward"},
-#                     {"step" : "all"}
-#                 ]
-#             },
-#             "rangeslider" : {
-#                 "visible" : True
-#             },
-#             "type" : "date"
-#         }
-#     )
-#     url = py.plot(fig, filename = f'historic_line_graph_by_{filter_column}:{filter_value}', auto_open=False)
-#     output_dict[graph_title] = url
-
-
-#     groupby_column_name_list = ['month','flat_type']
-#     x_name = "month"
-#     y_name = "resale_price" 
-#     target_town = "ANG MO KIO"
-#     graph_title = f'Total sales of HDB flats transacted in {target_town}'
-#     filter_query = { "$and" : [ { "month" : {"$gte": str(earliest_year) + "-01"}}, { "town" : {"$eq": target_town}} ] }
-#     fig = sum_line_graph_by_columns(groupby_column_name_list, x_name, y_name, graph_title, filter_query)
-#     fig.update_layout(
-#         xaxis_title="Year",
-#         yaxis_title="Sales (in SGD)",
-#         xaxis = {
-#             "rangeselector" : {
-#                 "buttons" : [
-#                     {"count" : 1,
-#                          "label" : "1m",
-#                          "step" : "month",
-#                          "stepmode" : "backward"},
-#                     {"count" : 6,
-#                          "label" : "6m",
-#                          "step" : "month",
-#                          "stepmode" : "backward"},
-#                     {"count" : 1,
-#                          "label" : "Current year to latest date",
-#                          "step" : "year",
-#                          "stepmode" : "todate"},
-#                     {"count" : 1,
-#                          "label" : "1y",
-#                          "step" : "year",
-#                          "stepmode" : "backward"},
-#                     {"count" : 3,
-#                          "label" : "Past 3 years",
-#                          "step" : "year",
-#                          "stepmode" : "backward"},
-#                     {"step" : "all"}
-#                 ]
-#             },
-#             "rangeslider" : {
-#                 "visible" : True
-#             },
-#             "type" : "date"
-#         }
-#         )
-#     url = py.plot(fig, filename = f'sum_line_graph_groupby_[{", ".join(groupby_column_name_list)}]', auto_open=False)
-#     output_dict[graph_title] = url
-
-    
-#     category_name = "flat_type"
-#     pipeline_result = "avg"
-#     target_town = "ANG MO KIO"
-#     target_year = 2017
-#     y_column = "resale_price"
-#     pipeline_list = [
-#         {"$match": {"town": target_town, "month": {"$regex" : str(target_year)}}},
-#         {"$group" : {"_id": "$" + category_name, y_column: {"$" + pipeline_result: "$" + y_column}} }
-#     ]
-#     graph_title = f"Average Resale price of the {category_name} in {target_town} on {target_year}"
-#     fig = aggregated_bar_graph(y_column, pipeline_list, graph_title)
-#     fig.update_layout(xaxis_title = "Flat Types", yaxis_title = "Average Resale Prices"
-#     )
-#     # Add dropdown
-#     fig.update_layout(
-#         updatemenus=[
-#             {
-#                 "type" : "buttons",
-#                 "direction" : "right",
-#                 "buttons" : [
-#                     {
-#                         "args" : ["type", "bar"],
-#                         "label" : "Bar",
-#                         "method" : "restyle"
-#                     },
-#                       {
-#                         "args" : ["type", "line"],
-#                         "label" : "Line",
-#                         "method" : "restyle"
-#                       },
-
-#                 ],
-#                 "pad" : {"r": 10, "t": 10},
-#                 "showactive" : True,
-#                 "x" : 0,
-#                 "xanchor" : "left",
-#                 "y" : 1.9,
-#                 "yanchor" : "top"
-#             },
-#         ]
-#     )
-#     # # Add annotation
-#     # fig.update_layout(
-#     #     annotations = [{"text" : 'Ascending order' ,"showarrow" : False,"x" : 0, "y" : 1.1, "yref" : "paper", "align" : "left"}]
-#     # )
-#     url = py.plot(fig, filename = f'avg_resale_price_by_{category_name}_in_{target_town}_on_{target_year}', auto_open=False)
-#     output_dict[graph_title] = url
-
-
-#     category_name = "flat_type"
-#     pipeline_result = "sum"
-#     target_town = "ANG MO KIO"
-#     target_year = 2017
-#     pipeline_list = [
-#         {"$match": {"town": target_town, "month": {"$regex" : str(target_year)}}},
-#         {"$group" : {"_id": "$" + category_name, pipeline_result: {"$" + pipeline_result: 1}} }
-#     ]
-#     graph_title = f"Number of {category_name} sold in {target_town} on {target_year}"
-#     fig = aggregated_bar_graph(pipeline_result, pipeline_list, graph_title)
-#     fig.update_layout(xaxis_title="Flat Types", yaxis_title="Number of flat types sold")
-#     fig.update_layout(
-#         updatemenus=[
-#             {
-#                 "type" : "buttons",
-#                 "direction" : "right",
-#                 "buttons" : [
-#                     {
-#                         "args" : ["type", "bar"],
-#                         "label" : "Bar",
-#                         "method" : "restyle"
-#                     },
-#                       {
-#                         "args" : ["type", "line"],
-#                         "label" : "Line",
-#                         "method" : "restyle"
-#                       },
-
-#                 ],
-#                 "pad" : {"r": 10, "t": 10},
-#                 "showactive" : True,
-#                 "x" : 0,
-#                 "xanchor" : "left",
-#                 "y" : 1.9,
-#                 "yanchor" : "top"
-#             },
-#         ]
-#     )
-
-#     # Add annotation
-#     fig.update_layout(
-#         annotations=[{
-#             "text" : '' ,
-#             "showarrow" : False,
-#             "x" : 0, 
-#             "y" : 1.1, 
-#             "yref" : "paper", 
-#             "align" : "left"}
-#         ]
-#     )
-
-#     url = py.plot(fig, filename = f'total_number_sold_by_{category_name}_in_{target_town}_on_{target_year}', auto_open=False)
-#     output_dict[graph_title] = url
-
-#     category_name = "flat_type"
-#     pipeline_result = "sum"
-#     target_town = "ANG MO KIO"
-#     target_year = 2017
-#     y_column = "resale_price"
-#     pipeline_list = [
-#         {"$match": {"town": target_town, "month": {"$regex" : str(target_year)}}},
-#         {"$group" : {"_id": "$" + category_name, pipeline_result: {"$" + pipeline_result: "$" + y_column}} }
-#     ]
-#     graph_title = f"Total sales of {category_name} sold in {target_town} on {target_year}"
-#     fig = aggregated_bar_graph(pipeline_result, pipeline_list, graph_title)
-#     # Add dropdown
-#     fig.update_layout(
-#         updatemenus=[
-#             {
-#                 "type" : "buttons",
-#                 "direction" : "right",
-#                 "buttons" : [
-#                     {
-#                         "args" : ["type", "bar"],
-#                         "label" : "Bar",
-#                         "method" : "restyle"
-#                     },
-#                       {
-#                         "args" : ["type", "line"],
-#                         "label" : "Line",
-#                         "method" : "restyle"
-#                       },
-
-#                 ],
-#                 "pad" : {"r": 10, "t": 10},
-#                 "showactive" : True,
-#                 "x" : 0,
-#                 "xanchor" : "left",
-#                 "y" : 1.9,
-#                 "yanchor" : "top"
-#             },
-#         ]
-#     )
-#     # Add annotation
-#     fig.update_layout(
-#         annotations=[{
-#             "text" : '', 
-#             "showarrow" : False, 
-#             "x" : 0, 
-#             "y" : 1.1, 
-#             "yref" : "paper", 
-#             "align" : "left"}
-#         ]
-#     )
-#     url = py.plot(fig, filename = f'total_resale_price_by_{category_name}_in_{target_town}_on_{target_year}', auto_open=False)
-#     output_dict[graph_title] = url
-
-#     print(output_dict)
-#     return None
-
-
 @eel.expose
 def init_ml_model():
-    """Sets the regression model into the global variable"""
+    """Initialises, then sets the regression model into the global variable.
+    As this includes the entire training operation, this function will take time.
+    """
     global machine_learning
     if not machine_learning:
         machine_learning = ML_Model()
@@ -878,8 +536,12 @@ def init_ml_model():
 
 @eel.expose
 def get_predicted_value(input_list):
+    """For using the existing ML model to predict a single resale flat's price."""
     global machine_learning
     # note: input_list must must be a list of dictionaries, with each dict representing each row
+    if not input_list:
+        print("No indicated flat to predict. Exiting...")
+        return None
     df = pd.DataFrame([input_list])
     result = machine_learning.predict_values(df)
     print("The predicted value(s) is/are:")
@@ -889,6 +551,13 @@ def get_predicted_value(input_list):
 
 @eel.expose
 def get_prediction_graph(input_row, years_ahead):
+    """takes in a single resale flat's data, then generates date values with the same resale flat data every month into the future, 
+    up to the number of years specified in years_ahead. 
+
+    runs the machine learning model on the data, therefore predicting the price of a flat for the next *x* years and displaying it all in a graph.
+
+    returns the hyperlink to the prediction graph.
+    """
     global machine_learning
     # note: input_list must must be a list of dictionaries, with each dict representing each row
     months_to_iterate = int(years_ahead) * 12
@@ -898,7 +567,7 @@ def get_prediction_graph(input_row, years_ahead):
     year_val = int(date_val[0])
     month_val = int(date_val[1])
 
-    for i in range(months_to_iterate):
+    for i in range(months_to_iterate):  # generate the future date valuse relative to the date stated in input_row["month"]
         
         if month_val >= 12:
             year_val += 1
@@ -926,13 +595,9 @@ def get_prediction_graph(input_row, years_ahead):
     print(prediction_graph_df.tail(2))
     print(len(prediction_graph_df.index))
     
-
     fig = px.line(prediction_graph_df, x='date', y='predicted_price')
-
-
     # url = py.plot(fig, filename = 'prediction_graph', auto_open=False)
     url = "web/images/prediction_graph"
-    fig.write_image(url)
     fig.write_image(url + ".png")
     fig.write_html(url + ".html")
     
@@ -944,7 +609,17 @@ def get_prediction_graph(input_row, years_ahead):
 
 @eel.expose
 def get_dropdown_values(query_mode, column_names = [], query_dict = {}):
-    """retrieves all unique data from specified columns in the .csv file containing dataset"""
+    """retrieves all unique values from specified fields in the database.
+    
+    query_mode: whether get_dropdown_values is used for querying table data or graph data. 
+    essential to prevent dropdown value overwrite from affecting unintended dropdown boxes.
+
+    column_names: the list of database fields to get unique values for
+
+    query_dict: a filter query to apply before getting the unique values
+
+    returns a dictionary with { *field name* : [*unique value list*] }
+    """
     output_dict = { "query_mode" : query_mode } # defines whether the dropdown values are for the query input
 
     year_toggle = False # to set whether to return the full month value, or just year
@@ -977,69 +652,21 @@ def get_dropdown_values(query_mode, column_names = [], query_dict = {}):
         # if no columns were specified, this function is useless
         print("No columns specified in function. Aborting....")
         return None
-    # sample result: { flat_type: (7) […], town: (27) […], street_name: (579) […], flat_model: (21) […], month: (393) […] }
-    # if len(column_names) > 0:
-
-    #     if input_df == None:
-    #         input_df = get_csv_as_pd()
-
-    #     for name in column_names:
-    #         if name in input_df.columns:
-    #             output_dict[name] = list(input_df[name].unique())
-    #         else:
-    #             print(f"{name} is not a valid column.\n Column list:{input_df.columns}\n")
-    #     return json.loads(json.dumps(output_dict, indent = 4))
-    # else:
-    #     print("No columns specified in function. Aborting....")
-    #     return None
-    
-# @eel.expose
-# def heatmap_plot():
-#     #this function is to plot the heatmap to predict the future price of flats based on type of flat and town area
-#     #below is just hardcoded example 
-#     vegetables = ["cucumber", "tomato", "lettuce", "asparagus",
-#               "potato", "wheat", "barley"]
-#     farmers = ["Farmer Joe", "Upland Bros.", "Smith Gardening",
-#            "Agrifun", "Organiculture", "BioGoods Ltd.", "Cornylee Corp."]
-
-#     harvest = np.array([[0.8, 2.4, 2.5, 3.9, 0.0, 4.0, 0.0],
-#                     [2.4, 0.0, 4.0, 1.0, 2.7, 0.0, 0.0],
-#                     [1.1, 2.4, 0.8, 4.3, 1.9, 4.4, 0.0],
-#                     [0.6, 0.0, 0.3, 0.0, 3.1, 0.0, 0.0],
-#                     [0.7, 1.7, 0.6, 2.6, 2.2, 6.2, 0.0],
-#                     [1.3, 1.2, 0.0, 0.0, 0.0, 3.2, 5.1],
-#                     [0.1, 2.0, 0.0, 1.4, 0.0, 1.9, 6.3]])
-
-
-#     fig, ax = plt.subplots()
-#     im = ax.imshow(harvest)
-
-#     # Show all ticks and label them with the respective list entries
-#     ax.set_xticks(np.arange(len(farmers)), labels=farmers)
-#     ax.set_yticks(np.arange(len(vegetables)), labels=vegetables)
-
-#     # Rotate the tick labels and set their alignment.
-#     plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
-#          rotation_mode="anchor")
-
-#     # Loop over data dimensions and create text annotations.
-#     for i in range(len(vegetables)):
-#         for j in range(len(farmers)):
-#             text = ax.text(j, i, harvest[i, j],
-#                        ha="center", va="center", color="w")
-
-#     ax.set_title("Harvest of local farmers (in tons/year)")
-#     fig.tight_layout()
-#     fig.savefig('web/resources/heatmap3.jpg')
-#     #plt.show()
-#     # return savedfig
-    
-# @eel.expose
-# def query_db_by_id(id_list, result_limit = 2000):
 
 
 @eel.expose
 def query_db(search_query_dict, result_limit = 2000, export = False):
+    """Runs a query on the database to obtain its fields and values.
+    
+    search_query_dict: a dictionary with { *field_name* : *value to search* }. 
+    Depending on the column, the search method can vary.
+
+    result_limit: defines the maximum number of results to return. 
+    Displaying more than 2000 rows in the website table takes a noticeably long time.
+
+    export: boolean function to define whether the results are to be returned as data, or exported as a csv file
+    for the user to download. if export is TRUE, result_limit is ignored
+    """
     DATE_COLUMN_NAME = "month"
     ID_COLUMN_NAME = "_id"
     data_table = get_db()
@@ -1054,10 +681,11 @@ def query_db(search_query_dict, result_limit = 2000, export = False):
     #                 "meal_id" : { "$ne" : 1778}
     #             }]
     initial_time = datetime.now()
+    addfields_pipeline = { "$addFields" : {} }
     if search_query_dict:  
         # if a query dict is specified, the code here runs to filter results
         query_list = []
-        pipeline = []
+        temp_column_names = [] # stores the names of new columns created by addfields
         # search_query_dict format is { column_name : {"search_type": "...", "value": "..."} }
         for key,value in search_query_dict.items():  # for each *column to search* : *search value*
             search_value = value["value"]
@@ -1079,24 +707,38 @@ def query_db(search_query_dict, result_limit = 2000, export = False):
                     # must match value. Acceptable to use here, since dropdowns take values from the data itself
                     query_list.append({key: {"$eq": search_value}})
                 elif value["search_type"] == "number":
-                    pipeline = [
-                            {"$addFields": { key + '_temp_str' : { '$toString' : '$' + key} }},
-                            # {"$match": {"temp_str": f"/{search_value}/"}},
-                        ]
+                    temp_column_names.append(key + '_temp_str')
+                    addfields_pipeline["$addFields"][key + '_temp_str'] = { '$toString' : '$' + key}
+                    # addfields_pipeline.append({ "$addFields" : addfields_value })
+                    # addfields_pipeline = [
+                    #         {"$addFields": { key + '_temp_str' : { '$toString' : '$' + key} }},
+                    #         # {"$match": {"temp_str": f"/{search_value}/"}},
+                    #     ]
                     query_list.append({key + '_temp_str': {"$regex" : f".*{search_value}.*"}})
-                    # result = pd.DataFrame(list(data_table.aggregate(pipeline)))
+                    # result = pd.DataFrame(list(data_table.aggregate(addfields_pipeline)))
                 else:
                     # as a catch-all, if i do not specify the search_type value
                     query_list.append({key: {"$regex" : f".*{search_value}.*"}}) # search if string contains, case insensitive
 
         # search_query_dict = {})
 
-        if not pipeline:
+        if not addfields_pipeline["$addFields"]:
             print(query_list)
             cursor = data_table.find({"$and" : query_list}, limit=result_limit)
         else:
-            pipeline.append({ "$match": {"$and" : query_list} })
-            print(pipeline)
+            # addfields_pipeline.append({ "$match": {"$and" : query_list} })
+            # addfields_pipeline.append({"$sort": SON([("month", -1)])})
+            exclude_columns = { "$project": {}}
+            for name in temp_column_names:
+                exclude_columns["$project"][name] = 0
+
+            pipeline = [
+                addfields_pipeline,
+                { "$match": {"$and" : query_list} },
+                { "$sort": SON([("month", -1)])},
+                exclude_columns
+            ]
+            pprint(pipeline)
             cursor = data_table.aggregate(pipeline)
     else:
         # else, get everything, limit results via result_limit
@@ -1115,17 +757,20 @@ def query_db(search_query_dict, result_limit = 2000, export = False):
         return True
     else:
         initial_time = datetime.now()
-        cursor = cursor.sort("month", -1)
+        
+        if not addfields_pipeline["$addFields"]:
+            cursor = cursor.sort("month", -1)
+        
         result = json.loads(dumps(cursor))
         print(f"JSON conversion done in {(datetime.now() - initial_time).total_seconds()}")
         return result
     
-    # 2000
+    
 @eel.expose
 def csvFormat(data): 
     # usage has been phased out for the main table, but the favourites table still uses this function
     # due to how it operates (in that the source of the data is retrieved from the front end)
-    PATH = os.getcwd() + '\\web\\resources\\queryData.csv'
+    PATH = os.getcwd() + '\\web\\resources\\'
     key = data[0].keys()
     
     with open(PATH + 'queryData.csv', 'w', newline='') as file:
@@ -1133,53 +778,6 @@ def csvFormat(data):
         writer.writeheader()
         writer.writerows(data)
         
-
-# @eel.expose
-# def query_csv(search_query_dict = None, max_rows = 2000):
-#     """retrieves data from .csv file containing dataset. returns data as JSON to allow the Javascript code to handle the data as an object"""
-#     df = get_csv_as_pd()
-
-#     if search_query_dict: # if there is a JSON object added into the parameters
-#         # https://www.geeksforgeeks.org/python-filtering-data-with-pandas-query-method/ for multiple query method
-        
-#         print(search_query_dict)
-#         # conditions = []
-#         for key,value in search_query_dict.items():
-#             # conditions.append(df[key].str.contains(value))
-
-#             if value and "month_" in key: # special condition, if user is trying to set a date filter range
-#                 if key == "month_earliest":
-#                     df = df[df["month"] >= value]
-#                 if key == "month_latest":
-#                     df = df[df["month"] <= value]
-#                 print(f"Filtered. Nuber of rows: {len(df.index)}")
-
-#             elif value and key in df.columns: # if value is not empty, and if column name exists in dataframe
-#                 print(key)
-#                 print(value)
-#                 df = df[df[key].astype(str).str.contains(value)]
-#                 print(f"Filtered. Nuber of rows: {len(df.index)}")
-
-            
-        
-#         # sample search_query_json = {
-#         #     "month": "",
-#         #     "town": "",
-#         #     "flat_type": "",
-#         #     "street_name": "",
-#         #     "storey_range": "",
-#         #     "floor_area_sqm": "",
-#         #     "flat_model": "",
-#         #     "lease_commencement_date": "",
-#         #     "resale_price": "",
-#         #     "remaining_lease": ""
-#         # }
-    
-#     print(df["month"].min())
-#     print(df["month"].max())
-#     df = df.iloc[:max_rows]  # determines max rows shown
-    
-#     return pd_to_json(df)
 
 @eel.expose
 def getPostalCode(streetName, block):

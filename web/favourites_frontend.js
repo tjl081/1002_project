@@ -105,6 +105,11 @@ async function populate_fav_table(fav_id_array){
     
 }
 
+function downloadCSV() {
+    
+    eel.csvFormat(export_df);
+  }
+
 
 $(document).ready( function () { // runs when the webpage loads
     

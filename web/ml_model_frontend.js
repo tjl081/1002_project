@@ -29,7 +29,15 @@ function populate_dropdown(dropdown_json) {
 async function predict_resale_values(housing_data){
     result = await eel.get_predicted_value(housing_data)()
     console.log(result)
-    $("#prediction_output").text("The predicted price of the flat is:" + result)
+    if (!isNaN(result)){  //https://stackoverflow.com/questions/175739/how-can-i-check-if-a-string-is-a-valid-number
+      result = result.toLocaleString(
+      undefined, // leave undefined to use the visitor's browser 
+                 // locale or a string like 'en-US' to override it.
+      { maximumFractionDigits: 2 }
+    ); // https://stackoverflow.com/questions/5731193/how-to-format-numbers
+    $("#prediction_output").text("The predicted price of the flat is: $" + result)
+    }
+    
     
 }
 
@@ -52,6 +60,8 @@ async function generate_graph(housing_data){
 
 function enable_predict_button(){
     $(".ml_button").prop('disabled', false);
+    $("#prediction_output").text("Machine learning module finished training.")
+
     
 }
 
@@ -111,7 +121,7 @@ $(document).ready( function () { // runs when the webpage loads
     dropdown_column_names = ["flat_type", "town", "street_name", "flat_model", "month" ] //specify all columns in dataset to pull all unique values for
     eel.get_dropdown_values("query_input", dropdown_column_names, {})(populate_dropdown)
     eel.init_ml_model()(enable_predict_button)
-
+    $("#prediction_output").text("Loading machine learning module. In the meantime, please input the resale flat data you wish to predict the price of.")
 
   } );
 
