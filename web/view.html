@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css"
+        integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.css">
+
+
+    <title>My Website</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/css/loader.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/view.css">
+</head>
+
+<body>
+    <div class="header">
+        <div class="inner_header">
+            <div class="logo_container">
+                <h1>MY SITE</h1>
+            </div>
+            <ul class="navigation">
+                <a href="main.html">
+                    <li>Home</li>
+                </a>
+                <a>
+                    <li>Compare Results</li>
+                </a>
+                <a>
+                    <li>Favourites</li>
+                </a>
+                <a>
+                    <li>Help</li>
+                </a>
+            </ul>
+        </div>
+    </div>
+    <section>
+        <!-- <div class="container"> -->
+        <table id="main-table" data-toggle="table" data-toolbar="#toolbar" data-height="460">
+            <thead>
+                <tr>
+                    <!-- <th data-field="id">Item ID</th>
+                          <th data-field="name">Item Name</th>
+                          <th data-field="price">Item Price</th> -->
+                </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+
+        <!-- </div> -->
+
+        <div class="flex-container">
+            <div id="imagestore" class="flex-item-left">
+
+            </div>
+            <div id="facilities" class="flex-item-right">
+                <h2>List of Facilities around the area</h2>
+                <div id="amenity-dropdown">
+                    <label for="categories" class="flex-left">Choose a category: </label>
+                    <form class="flex-right">
+                        <select name="categories" id="categories">
+                            <option value="default" selected>--Choose Category--</option>
+                            <option value="activity">Activity</option>
+                            <option value="commercial">Commercial</option>
+                            <option value="catering">Catering</option>
+                            <option value="education">Education</option>
+                            <option value="childcare">Childcare</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="healthcare">Healthcare</option>
+                            <option value="leisure">Leisure</option>
+                            <option value="office">Office</option>
+                            <option value="parking">Parking</option>
+                            <option value="service">Service</option>
+                            <option value="sport">Sport</option>
+                            <option value="public_transport">Public Transport</option>
+                        </select>
+                    </form>
+                </div>
+                <table id="facil-table" data-toggle="table" data-toolbar="#toolbar" data-height="460">
+                    <thead>
+                        <tr>
+                            <th id="id">Place Name</th>
+                            <th id="name">Amenity</th>
+                            <th id="distance">Distance (in meters from the block)</th>
+                            <th id="postcode">Postal Code</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+        integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+        crossorigin="anonymous"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"
+        integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
+        crossorigin="anonymous"></script>
+    <script type="text/javascript" src="/eel.js"></script>
+    <script type="text/javascript" src="/map.js"></script>
+
+</body>
+
+</html>
