@@ -164,8 +164,9 @@ def query_graphs(input_dict):
             print("Uploading graph")
             # url = py.plot(fig, filename = f'{distinct_val_count_column}_distinct_count', auto_open=False)
             filename = input_dict["graph_category"] + "_0"
-            url = f"web/images/{filename}.png"
-            fig.write_image(url)
+            url = f"web/images/{filename}"
+            fig.write_image(url + ".png")
+            fig.write_html(url + ".html")
             print("Uploaded graph")
             output_dict[filename] = url
 
@@ -208,8 +209,9 @@ def query_graphs(input_dict):
             print("Uploading graph")
             # url = py.plot(fig, filename = f'{distinct_val_count_column}_distinct_count', auto_open=False)
             filename = input_dict["graph_category"] + "_1"
-            url = f"web/images/{filename}.png"
-            fig.write_image(url)
+            url = f"web/images/{filename}"
+            fig.write_image(url + ".png")
+            fig.write_html(url + ".html")
             print("Uploaded graph")
             output_dict[filename] = url
 
@@ -266,8 +268,9 @@ def query_graphs(input_dict):
             # url = py.plot(fig, filename = f'historic_line_graph_by_{filter_column}:{filter_value}', auto_open=False)
             # output_dict[input_dict["graph_category"] + "_0"] = url
             filename = input_dict["graph_category"] + "_0"
-            url = f"web/images/{filename}.png"
-            fig.write_image(url)
+            url = f"web/images/{filename}"
+            fig.write_image(url + ".png")
+            fig.write_html(url + ".html")
             print("Uploaded graph")
             output_dict[filename] = url
             
@@ -319,8 +322,9 @@ def query_graphs(input_dict):
             # url = py.plot(fig, filename = f'sum_line_graph_groupby_[{", ".join(groupby_column_name_list)}]', auto_open=False)
             # output_dict[input_dict["graph_category"] + "_1"] = url
             filename = input_dict["graph_category"] + "_1"
-            url = f"web/images/{filename}.png"
-            fig.write_image(url)
+            url = f"web/images/{filename}"
+            fig.write_image(url + ".png")
+            fig.write_html(url + ".html")
             print("Uploaded graph")
             output_dict[filename] = url
 
@@ -376,8 +380,9 @@ def query_graphs(input_dict):
             # url = py.plot(fig, filename = f'avg_resale_price_by_{category_name}_in_{target_town}_on_{target_year}', auto_open=False)
             # output_dict[input_dict["graph_category"] + "_0"] = url
             filename = input_dict["graph_category"] + "_0"
-            url = f"web/images/{filename}.png"
-            fig.write_image(url)
+            url = f"web/images/{filename}"
+            fig.write_image(url + ".png")
+            fig.write_html(url + ".html")
             print("Uploaded graph")
             output_dict[filename] = url
 
@@ -435,8 +440,9 @@ def query_graphs(input_dict):
             # url = py.plot(fig, filename = f'total_number_sold_by_{category_name}_in_{target_town}_on_{target_year}', auto_open=False)
             # output_dict[input_dict["graph_category"] + "_1"] = url
             filename = input_dict["graph_category"] + "_1"
-            url = f"web/images/{filename}.png"
-            fig.write_image(url)
+            url = f"web/images/{filename}"
+            fig.write_image(url + ".png")
+            fig.write_html(url + ".html")
             print("Uploaded graph")
             output_dict[filename] = url
 
@@ -494,8 +500,9 @@ def query_graphs(input_dict):
             # url = py.plot(fig, filename = f'total_resale_price_by_{category_name}_in_{target_town}_on_{target_year}', auto_open=False)
             # output_dict[input_dict["graph_category"] + "_2"] = url
             filename = input_dict["graph_category"] + "_2"
-            url = f"web/images/{filename}.png"
-            fig.write_image(url)
+            url = f"web/images/{filename}"
+            fig.write_image(url + ".png")
+            fig.write_html(url + ".html")
             print("Uploaded graph")
             output_dict[filename] = url
         
@@ -918,7 +925,14 @@ def get_prediction_graph(input_row, years_ahead):
     
 
     fig = px.line(prediction_graph_df, x='date', y='predicted_price')
-    url = py.plot(fig, filename = 'prediction_graph', auto_open=False)
+
+
+    # url = py.plot(fig, filename = 'prediction_graph', auto_open=False)
+    url = "web/images/prediction_graph"
+    fig.write_image(url)
+    fig.write_image(url + ".png")
+    fig.write_html(url + ".html")
+    
     print(url)
     return url
     # test result output

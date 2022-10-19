@@ -340,8 +340,13 @@ async function display_graphs(graph_url_json){
       // `
       url = graph_url_json[key].replace("web/", "")
       timestamp = new Date().getTime();
-      html_code = `<img style="width: 80%;" class="img-fluid" id="${key}" src="${url + "?t=" + timestamp}" />`
-      $(`#${key}`).remove();
+      html_code = `
+      <div class="container ${key}">
+        <a href="${url + ".html"}" class="link-primary" target="_blank">Click here to interact with the graph!</a>
+        <img style="width: 80%;" class="img-fluid" id="${key}" src="${url + ".png?t=" + timestamp}" />
+      </div>
+      `
+      $(`.${key}`).remove();
       console.log(html_code)
       graph_div.append(html_code)
       // await $("#test").prepend(html_code)

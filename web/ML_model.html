@@ -44,7 +44,7 @@
         
     </div>
     
-    <div class="container">
+    <div class="query_input container">
 
         <h1 class="display-2">Resale flat details</h1>
 
@@ -107,14 +107,19 @@
     </div>
     
     <div class="container">
-        <button type="button" id="init_ml_model" class="btn btn-primary ml_button" disabled>Predict price</button>
-        <div id="prediction_output">The predicted price of the flat is:</div>
-
-        <button type="button" id="get_ml_graph" class="btn btn-primary ml_button" disabled>Generate predicted price graph</button>
-        <div class="embed-responsive embed-responsive-16by9">
-            <iframe frameborder="0" scrolling="no" class="embed-responsive-item" id="prediction_graph" src=""></iframe>
-            <!-- <iframe width="900" height="800" frameborder="0" scrolling="no" src="//plotly.com/~tjl081/1.embed"></iframe> -->
+        <div class="container predict_price">
+            <button type="button" id="init_ml_model" class="btn btn-primary ml_button" disabled>Predict price</button>
+            <div id="prediction_output">The predicted price of the flat is:</div>
         </div>
+        
+        <div class="container predict_graph" style="margin-top: 30px;">
+            <button type="button" id="get_ml_graph" class="btn btn-primary ml_button" disabled>Generate predicted price graph</button>
+            <div class="prediction_graph_container">
+                <!-- <iframe frameborder="0" scrolling="no" class="embed-responsive-item" id="prediction_graph_plotly" src=""></iframe> -->
+                <!-- <iframe width="900" height="800" frameborder="0" scrolling="no" src="//plotly.com/~tjl081/1.embed"></iframe> -->
+            </div>
+        </div>
+        
         
     </div>
     
