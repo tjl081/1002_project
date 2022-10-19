@@ -251,9 +251,18 @@ def query_db(search_query_dict, result_limit = 2000):
     initial_time = datetime.now()
     result = json.loads(dumps(cursor))
     print(f"JSON conversion done in {(datetime.now() - initial_time).total_seconds()}")
-
     return result
-    
+
+@eel.expose
+def catName(data):
+    catNames = {'month':'Month','town':'Town','flat_type':'Flat Type','block':'Block',
+    'street_name':'Street Name','storey_range':'Storey range','floor_area_sqm':'Floor Area Sq Metre',
+    'flat_model':'Flat Model','lease_commence_date':'Lease Commence Date','resale_price':'Resale Price','remaining_lease':'Remaining Lease'}
+    keyVal = data
+    if keyVal in catNames.keys():
+        data = catNames.get(keyVal)
+    return data
+
     # 2000
 @eel.expose
 def csvFormat(data): 

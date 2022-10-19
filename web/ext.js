@@ -204,10 +204,7 @@ function populate_dropdown(dropdown_json) {
 
 }
 
-
-
-
-function populate_main_table(df) {
+async function populate_main_table(df) {
   export_df = df
   console.log("populating main table")
   console.log(df)
@@ -222,11 +219,13 @@ function populate_main_table(df) {
   $(".loader").hide();
   //generate headers
   for (var key of Object.keys(df[0])) {
+
     //console.log(key + " -> " + df[0][key])
     if (!(key.startsWith("_"))) {  // append column header
+      newKey = await eel.catName(key)();
       column_header_list.push(key)
       column_count += 1
-      $("#main-table thead tr").append(`<th>${key}</th>`);
+      $("#main-table thead tr").append(`<th>${newKey}</th>`);
     }
     // else{
     //   exclude_column_count += 1
