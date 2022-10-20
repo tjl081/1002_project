@@ -27,16 +27,24 @@ function populate_dropdown(dropdown_json) {
   }
 
 async function predict_resale_values(housing_data){
-    result = await eel.get_predicted_value(housing_data)()
-    console.log(result)
-    if (!isNaN(result)){  //https://stackoverflow.com/questions/175739/how-can-i-check-if-a-string-is-a-valid-number
-      result = result.toLocaleString(
-      undefined, // leave undefined to use the visitor's browser 
-                 // locale or a string like 'en-US' to override it.
-      { maximumFractionDigits: 2 }
-    ); // https://stackoverflow.com/questions/5731193/how-to-format-numbers
-    $("#prediction_output").text("The predicted price of the flat is: $" + result)
+
+  for (val of Object.values(housing_data)){
+    if ( val == null || !val){
+      $("#prediction_output").text("Please ensure all input boxes are properly filled")
+      return null
     }
+  }
+
+  result = await eel.get_predicted_value(housing_data)()
+  console.log(result)
+  if (!isNaN(result)){  //https://stackoverflow.com/questions/175739/how-can-i-check-if-a-string-is-a-valid-number
+    result = result.toLocaleString(
+    undefined, // leave undefined to use the visitor's browser 
+                // locale or a string like 'en-US' to override it.
+    { maximumFractionDigits: 2 }
+  ); // https://stackoverflow.com/questions/5731193/how-to-format-numbers
+  $("#prediction_output").text("The predicted price of the flat is: $" + result)
+  }
     
     
 }
@@ -50,7 +58,7 @@ async function generate_graph(housing_data){
     // html_code = `<img style="width: 80%;" class="img-fluid" id="prediction_graph" src="${url + "?t=" + timestamp}" />`
     html_code = `
       <a style="display: block;" href="${url + ".html"}" class="link-primary" target="_blank">Click here to interact with the graph!</a>
-      <img style="width: 80%;" class="img-fluid" id="prediction_graph" src="${url + ".png?t=" + timestamp}" />
+      <a href="${url + ".html"}" target="_blank"><img style="width: 80%;" class="img-fluid" id="prediction_graph" src="${url + ".png?t=" + timestamp}" /></a>
       `
     $(".prediction_graph_container").prepend(html_code)
     // $("#prediction_graph").attr("src",result);
@@ -99,6 +107,11 @@ function retrieve_field_values(){
       // refer to HTML to see what data-field and search-type means
       column_name = $(element).attr("data-field") 
       input_value = $(element).val()
+
+      selected_index = $(element).prop('selectedIndex'); //check if the first value of a dropdown (the placeholder) is selected
+      if (selected_index == 0) {
+        input_value = ""
+      }
 
       input_data[column_name] = input_value
   })

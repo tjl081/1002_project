@@ -5,16 +5,16 @@ import os
 import glob
 import pandas as pd
 import json
-from bson.json_util import dumps # converts mongodb cursor into python suitable 
+from bson.json_util import dumps  # bson comes with pymongo installation
 from bson.son import SON
-from bson.objectid import ObjectId #mongodb objectid
+from bson.objectid import ObjectId # to support mongodb ObjectId search
 from pymongo import MongoClient # pip install "pymongo[srv]"
-import requests #pip install requests
+import requests # pip install requests
 from requests.structures import CaseInsensitiveDict
 from geopy.geocoders import Nominatim # pip install geopy
 import chart_studio
 import plotly.express as px
-# pip install -U kaleido
+# pip install --upgrade "kaleido==0.1.* to add Figure.write_image"
 import chart_studio.plotly as py  # for exporting the graph to an API. scrapped due to upload limit of 100
 from pprint import pprint
 
@@ -166,7 +166,7 @@ def query_graphs(input_dict):
         if '0' in input_dict:
             distinct_val_count_column = "flat_model"
             qty_label = "number_of_flats_sold"
-            graph_title = "Flat models sold since 1990"
+            graph_title = "<b>Flat models sold since 1990</b>"
             fig = pie_chart_of_column(distinct_val_count_column, qty_label, graph_title)
             fig.update_traces(textposition='inside', textinfo='percent+label')
             fig.update_layout(title_font_size = 30)
@@ -184,7 +184,7 @@ def query_graphs(input_dict):
             distinct_val_count_column = "flat_type"
             qty_label = "number_of_flat_type_sold"
             target_town = input_dict['1']["target_town"]
-            graph_title = f"Flat type sold in {target_town} since {str(earliest_year)}"
+            graph_title = f"<b>Flat type sold in {target_town} since {str(earliest_year)}</b>"
             filter_query = { "$and" : [ { "month" : {"$gte": str(earliest_year) + "-01"}}, { "town" : {"$eq": target_town}} ] }
             fig = pie_chart_of_column(distinct_val_count_column, qty_label, graph_title, filter_query)
             fig.update_layout(
@@ -208,7 +208,7 @@ def query_graphs(input_dict):
                         "showactive" : True,
                         "x" : 0,
                         "xanchor" : "left",
-                        "y" : 1.135,
+                        "y" : 1,
                         "yanchor" : "top"
                     },
                 ],
@@ -238,7 +238,7 @@ def query_graphs(input_dict):
                 { "town" : {"$eq": target_town}},
                 { filter_column : {"$eq": filter_value}}
                 ] }
-            graph_title = f"Resale prices of {filter_value} flats"
+            graph_title = f"<b>Resale prices of {filter_value} flats</b>"
             fig = historic_line_graph(x_column_name, y_columnm_name, filter_column, graph_title, filter_query)
             fig.update_layout(xaxis_title = "Year", yaxis_title = "Resale Prices")
             fig.update_layout(
@@ -290,7 +290,7 @@ def query_graphs(input_dict):
             x_name = "month"
             y_name = "resale_price" 
             target_town = input_dict['1']["target_town"]
-            graph_title = f'Total sales of HDB flats transacted in {target_town}'
+            graph_title = f'<b>Total sales of HDB flats transacted in {target_town}</b>'
             filter_query = { "$and" : [ { "month" : {"$gte": str(earliest_year) + "-01"}}, { "town" : {"$eq": target_town}} ] }
             fig = sum_line_graph_by_columns(groupby_column_name_list, x_name, y_name, graph_title, filter_query)
             fig.update_layout(
@@ -350,7 +350,7 @@ def query_graphs(input_dict):
                 {"$match": {"town": target_town, "month": {"$regex" : str(target_year)}}},
                 {"$group" : {"_id": "$" + category_name, y_column: {"$" + pipeline_result: "$" + y_column}} }
             ]
-            graph_title = f"Average Resale price of the {category_name} in {target_town} on {target_year}"
+            graph_title = f"<b>Average Resale price of the {category_name} in {target_town} on {target_year}</b>"
             fig = aggregated_bar_graph(y_column, pipeline_list, graph_title)
             fig.update_layout(xaxis_title = "Flat Types", yaxis_title = "Average Resale Prices")
             # Add dropdown
@@ -362,12 +362,12 @@ def query_graphs(input_dict):
                         "buttons" : [
                             {
                                 "args" : ["type", "bar"],
-                                "label" : "Bar",
+                                "label" : "Bar Graph",
                                 "method" : "restyle"
                             },
                             {
                                 "args" : ["type", "line"],
-                                "label" : "Line",
+                                "label" : "Line Graph",
                                 "method" : "restyle"
                             },
 
@@ -403,7 +403,7 @@ def query_graphs(input_dict):
                 {"$match": {"town": target_town, "month": {"$regex" : str(target_year)}}},
                 {"$group" : {"_id": "$" + category_name, pipeline_result: {"$" + pipeline_result: 1}} }
             ]
-            graph_title = f"Number of {category_name} sold in {target_town} on {target_year}"
+            graph_title = f"<b>Number of {category_name} sold in {target_town} on {target_year}</b>"
             fig = aggregated_bar_graph(pipeline_result, pipeline_list, graph_title)
             fig.update_layout(xaxis_title="Flat Types", yaxis_title="Number of flat types sold")
             fig.update_layout(
@@ -414,12 +414,12 @@ def query_graphs(input_dict):
                         "buttons" : [
                             {
                                 "args" : ["type", "bar"],
-                                "label" : "Bar",
+                                "label" : "Bar Graph",
                                 "method" : "restyle"
                             },
                             {
                                 "args" : ["type", "line"],
-                                "label" : "Line",
+                                "label" : "Line Graph",
                                 "method" : "restyle"
                             },
 
@@ -464,7 +464,7 @@ def query_graphs(input_dict):
                 {"$match": {"town": target_town, "month": {"$regex" : str(target_year)}}},
                 {"$group" : {"_id": "$" + category_name, pipeline_result: {"$" + pipeline_result: "$" + y_column}} }
             ]
-            graph_title = f"Total sales of {category_name} sold in {target_town} on {target_year}"
+            graph_title = f"<b>Total sales of {category_name} sold in {target_town} on {target_year}</b>"
             fig = aggregated_bar_graph(pipeline_result, pipeline_list, graph_title)
             fig.update_layout(xaxis_title = "Flat Types", yaxis_title = "Total sale price")
             # Add dropdown
@@ -476,12 +476,12 @@ def query_graphs(input_dict):
                         "buttons" : [
                             {
                                 "args" : ["type", "bar"],
-                                "label" : "Bar",
+                                "label" : "Bar Graph",
                                 "method" : "restyle"
                             },
                             {
                                 "args" : ["type", "line"],
-                                "label" : "Line",
+                                "label" : "Line Graph",
                                 "method" : "restyle"
                             },
 
@@ -533,6 +533,16 @@ def init_ml_model():
     if not machine_learning:
         machine_learning = ML_Model()
 
+
+@eel.expose
+def catName(data):
+    catNames = {'month':'Month','town':'Town','flat_type':'Flat Type','block':'Block',
+    'street_name':'Street Name','storey_range':'Storey range','floor_area_sqm':'Floor Area Sq Metre',
+    'flat_model':'Flat Model','lease_commence_date':'Lease Commence Date','resale_price':'Resale Price','remaining_lease':'Remaining Lease'}
+    keyVal = data
+    if keyVal in catNames.keys():
+        data = catNames.get(keyVal)
+    return data
 
 @eel.expose
 def get_predicted_value(input_list):
@@ -751,6 +761,7 @@ def query_db(search_query_dict, result_limit = 2000, export = False):
         initial_time = datetime.now()
         df = pd.DataFrame(list(cursor))
         print(df.info())
+        df.drop(["_id"], axis=1, inplace=True)
         PATH = os.getcwd() + '\\web\\resources\\queryData.csv'
         df.to_csv(PATH)
         print(f"CSV conversion done in {(datetime.now() - initial_time).total_seconds()}")
@@ -778,7 +789,7 @@ def csvFormat(data):
         writer.writeheader()
         writer.writerows(data)
         
-
+#returns the postal code based on the streetName and block from the record that the user click into
 @eel.expose
 def getPostalCode(streetName, block):
     #initialize Nominatim API
@@ -819,11 +830,12 @@ def getRecordByRecordId(id):
     record = data_table.find_one({'_id': ObjectId(id) })
     return record
 
+#get the header names to display in table in view.html
 @eel.expose
 def getColumns(id):
     print("in getColumns")
     columnlist=[]
-    record_dict = getRecordByRecordId(id)
+    record_dict = getRecordByRecordId(id) #retrieve record based on the recordid 
     print(record_dict)
     keylist = list(record_dict.keys())
 
@@ -851,6 +863,7 @@ def getRow(id):
 
 #get place id
 def getPlacesId(postalcode):
+    #initialize api
     geoapify = "https://api.geoapify.com/v1/geocode/search?postcode="+postalcode+"&apiKey=282342ec9baa42e2ba5897587f10f26c"
     headers = CaseInsensitiveDict()
     headers["Accept"] = "application/json"
@@ -869,11 +882,12 @@ def getPlacesId(postalcode):
 
 
 @eel.expose
-def getplaces(postalcode,category):
+def getplaces(postalcode,category): #get details on the amenitities near the block based on the record and category selected
     #print("postalcode in getplaces is: " + postalcode + ",Category is: " + category)
     placeid = getPlacesId(postalcode)
     #print("placeid: " + placeid)
     try:
+        #initialize places api
         geoapify = "https://api.geoapify.com/v2/places?categories="+category+"&filter=place:"+placeid+"&limit=50&apiKey=282342ec9baa42e2ba5897587f10f26c"
         print(geoapify)
         headers = CaseInsensitiveDict()

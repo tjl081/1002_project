@@ -1,6 +1,6 @@
 
 $(document).ready(function () {
-    let getrecordId = new URLSearchParams(window.location.search);
+    let getrecordId = new URLSearchParams(window.location.search); //get recordid from url 
     if (getrecordId.has('recordId')) {
         recordId = getrecordId.get('recordId');
         console.log(recordId);
@@ -12,7 +12,7 @@ $(document).ready(function () {
         category = "";
         const select = document.getElementById('categories');
         // $("#facil-table tbody").append(`<div class="loader"></div>`)
-        select.addEventListener('change', async function handleChange() {
+        select.addEventListener('change', async function handleChange() { 
             category = select.options[select.selectedIndex].text;
             category = category.toLowerCase();
             if (category == 'public transport') {
@@ -20,6 +20,7 @@ $(document).ready(function () {
             }
             console.log(category);
             $("#facil-table tbody").prepend(`<div id="loader-table"></div>`)
+            $("#facil-table tbody tr").remove()
             places = await eel.getplaces(postalcode, category)();
             // $("#loader-table").hide();
             viewAmenities(places);
@@ -104,11 +105,11 @@ function viewAmenities(input_dict) {
             row_value_str += `<td>${val}</td>`
         }
 
-        $("#facil-table tbody").append(`<tr>${row_value_str}</tr>`)
+        $("#facil-table tbody").append(`<tr>${row_value_str}</tr>`) //display the details on the place in table 
 
 
     }
-    $("#facil-table tbody #loader-table").remove()
+    $("#facil-table tbody #loader-table").remove() //remove loader after table is displayed
     console.log("row appended");
 
 }

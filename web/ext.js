@@ -29,34 +29,49 @@ function toggletabs(evt, tabName) {
 }
 
 
+function set_row_as_fav(checkbox_object){
+  console.log("checkbox detected")
+  row_database_id = checkbox_object.val();
+
+  if (checkbox_object.prop('checked')) {
+    console.log("value checked!")
+    console.log(row_database_id)
+    if (sessionStorage.getItem("fav_list")) {
+      fav_id_array = JSON.parse(sessionStorage.getItem("fav_list"));
+      console.log(fav_id_array)
+      fav_id_array.push(row_database_id);
+    }
+    else {
+      fav_id_array = [row_database_id]
+    }
+  }
+  else {
+    fav_id_array = JSON.parse(sessionStorage.getItem("fav_list"));
+    remove_at_index = jQuery.inArray(row_database_id, fav_id_array)
+    if (remove_at_index != -1) { // if a result is found
+      fav_id_array.splice(remove_at_index, 1);
+    }
+
+
+  }
+
+  sessionStorage.setItem("fav_list", JSON.stringify(fav_id_array));
+  console.log(sessionStorage.getItem("fav_list"))
+}
+
+
 function define_table_events() {
   // event handlers for generated table elements must be defined AFTER the elements are generated
   $(".set-fav").change(function () {
-    console.log("checkbox detected")
-    row_database_id = $(this).val();
-    if (this.checked) {
-      if (sessionStorage.getItem("fav_list")) {
-        fav_id_array = JSON.parse(sessionStorage.getItem("fav_list"));
-        console.log(fav_id_array)
-        fav_id_array.push(row_database_id);
-      }
-      else {
-        fav_id_array = [row_database_id]
-      }
-    }
-    else {
-      fav_id_array = JSON.parse(sessionStorage.getItem("fav_list"));
-      remove_at_index = jQuery.inArray(row_database_id, fav_id_array)
-      if (remove_at_index != -1) { // if a result is found
-        fav_id_array.splice(remove_at_index, 1);
-      }
-
-
-    }
-
-    sessionStorage.setItem("fav_list", JSON.stringify(fav_id_array));
-    console.log(sessionStorage.getItem("fav_list"))
+    set_row_as_fav($(this))
   });
+
+  $("select[name='main-table_length']").change(function (event) { // apply event handler again on newly visible columns
+    $(".set-fav").change(function () {
+      set_row_as_fav($(this))
+    });
+  });
+
 
 }
 
@@ -240,7 +255,7 @@ function populate_dropdown(dropdown_json) {
 
 }
 
-function populate_main_table(df) {
+async function populate_main_table(df) {
   export_df = df
   console.log("populating main table")
   console.log(df)
@@ -252,7 +267,7 @@ function populate_main_table(df) {
   column_header_list = []
 
   //hide loading animation before table populated
-  $(".loader").hide();
+  $(".table > .loader").hide();
 
 
   //generate headers
@@ -260,9 +275,10 @@ function populate_main_table(df) {
   for (var key of Object.keys(df[0])) {
     //console.log(key + " -> " + df[0][key])
     if (!(key.startsWith("_"))) {  // append column header
+      newKey = await eel.catName(key)();
       column_header_list.push(key)
       column_count += 1
-      $("#main-table thead tr").append(`<th>${key}</th>`);
+      $("#main-table thead tr").append(`<th>${newKey}</th>`);
     }
     // else{
     //   exclude_column_count += 1
@@ -348,11 +364,12 @@ async function display_graphs(graph_url_json){
       //   <iframe width="900" height="800" frameborder="0" scrolling="no" class="embed-responsive-item" id="${key}" src="${graph_url_json[key]}"></iframe>
       // `
       url = graph_url_json[key].replace("web/", "")
+      $(`.${graph_category} .loader`).hide();
       timestamp = new Date().getTime();
       html_code = `
       <div class="container ${key}">
         <a style="display: block;" href="${url + ".html"}" class="link-primary" target="_blank">Click here to interact with the graph!</a>
-        <img style="width: 80%;" class="img-fluid" id="${key}" src="${url + ".png?t=" + timestamp}" />
+        <a href="${url + ".html"}" target="_blank"><img style="width: 80%;" class="img-fluid" id="${key}" src="${url + ".png?t=" + timestamp}" /></a>
       </div>
       `
       $(`.${key}`).remove();

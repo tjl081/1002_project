@@ -29,9 +29,6 @@
       <ul class="navigation">
             <a href="main.html" class="link-primary">
               <li>Home</li>
-              </a>
-            <a>
-              <li>Compare Results</li>
             </a>
             <a href="favourites.html" class="link-primary">
               <li>Favourites</li>
@@ -129,9 +126,9 @@
       <button class="tablinks" onclick="toggletabs(event, 'table_div')" id="defaultOpen">Table</button>
       <button class="tablinks" onclick="toggletabs(event, 'graph')">Graph</button>
     </div>
-    <div class="loader"></div>
+    
     <div class="table tab-content" id="table_div">
-
+      <div class="loader"></div>
       <!-- <div class="container"> -->
       <p>Table only displays a maximum of 2000 results to prevent long load times</p>
       <table id="main-table" data-toggle="table" data-toolbar="#toolbar" data-height="460" hidden>
@@ -170,7 +167,7 @@
       <div class="pie_chart container" style="display: none;">
         Pie chart
         <div class="container" id="pie_chart_graph_0" graph-number="0">
-          
+          <div class="loader"></div>
           <!-- <div class="embed-responsive embed-responsive-16by9">
             <iframe width="900" height="800" frameborder="0" scrolling="no" class="embed-responsive-item" class="graph_div" src=""></iframe>
           </div> -->
@@ -193,6 +190,7 @@
                 
               </select>
             </div>
+            <div class="loader"></div>
           </div>
           
           <!-- <iframe width="900" height="800" frameborder="0" scrolling="no" class="embed-responsive-item" class="graph_div" src="https://plotly.com/~tjl081/8/"></iframe> -->
@@ -221,6 +219,7 @@
                 
               </select>
             </div>
+            <div class="loader"></div>
           </div>
           
         </div>
@@ -239,6 +238,7 @@
                 
               </select>
             </div>
+            <div class="loader"></div>
           </div>
           
         </div>
@@ -257,6 +257,7 @@
                 
               </select>
             </div>
+            <div class="loader"></div>
           </div>
           
         </div>
@@ -287,6 +288,7 @@
                 
               </select>
             </div>
+            <div class="loader"></div>
           </div>
           
 
@@ -308,6 +310,7 @@
                 
               </select>
             </div>
+            <div class="loader"></div>
           </div>
           
       </div>
