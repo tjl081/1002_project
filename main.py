@@ -466,7 +466,7 @@ def query_graphs(input_dict):
             ]
             graph_title = f"<b>Total sales of {category_name} sold in {target_town} on {target_year}</b>"
             fig = aggregated_bar_graph(pipeline_result, pipeline_list, graph_title)
-            fig.update_layout(xaxis_title = "Flat Types", yaxis_title = "Total sale price")
+            fig.update_layout(xaxis_title = "Flat Types", yaxis_title = "Total sales (in SGD)")
             # Add dropdown
             fig.update_layout(
                 updatemenus=[

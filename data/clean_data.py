@@ -39,18 +39,17 @@ if __name__ == "__main__":
     df.to_csv(path + '\\cleaned\\clean.csv', index=False) 
 
     # print_current_datetime()
-    # # add data to mongodb
-    # # df = pd.read_csv(path + "/cleaned/clean.csv")
-    # print("Uploading data to mongodb")
-    # connection_string = ""
-    # with open(path + '/access_url.txt', 'r') as f:
-    #     connection_string = f.readline()
-    # print(connection_string)
-    # client = MongoClient(connection_string)
-    # db = client.test
-    # resale_prices = db["resale_prices"]
-    # resale_prices.insert_many(df.to_dict('records'))
-    # resale_prices.create_index([("town", 1)])
-    # resale_prices.create_index([("flat_type", 1)])
-    # resale_prices.create_index([("flat_model", 1)])
-    # resale_prices.create_index([("street_name", 1)])
+    # add data to mongodb
+    print("Uploading data to mongodb")
+    connection_string = ""
+    with open(path + '/access_url.txt', 'r') as f:
+        connection_string = f.readline()
+    print(connection_string)
+    client = MongoClient(connection_string)
+    db = client.test
+    resale_prices = db["resale_prices"]
+    resale_prices.insert_many(df.to_dict('records'))
+    resale_prices.create_index([("town", 1)])
+    resale_prices.create_index([("flat_type", 1)])
+    resale_prices.create_index([("flat_model", 1)])
+    resale_prices.create_index([("street_name", 1)])
