@@ -28,7 +28,8 @@ def get_db():
     return db_object
 
 def remove_columns(df, column_name_list):
-
+    """helper function. takes in a dataframe and a list of column names to remove from the dataframe. 
+    can gracefully handle column names that do not exist. returns the updateed dataframe."""
     for col in column_name_list:
         if col in df.columns:
             df = df.drop(col, axis=1)

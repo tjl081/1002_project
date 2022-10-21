@@ -50,7 +50,9 @@ async function predict_resale_values(housing_data){
 }
 
 async function generate_graph(housing_data){
+    $(".prediction_graph_container > .loader").show();
     result = await eel.get_prediction_graph(housing_data, 3)()
+    $(".prediction_graph_container > .loader").hide();
     console.log(result)
     url = result.replace("web/", "")
     timestamp = new Date().getTime();
