@@ -284,7 +284,7 @@ async function populate_main_table(df) {
     //   exclude_column_count += 1
     // }
   }
-  $("#main-table thead tr").append(`<th>View</th>`);
+  $("#main-table thead tr").append(`<th>Amenities</th>`);
 
   //populate table with data
   fav_id_array = JSON.parse(sessionStorage.getItem("fav_list"));
